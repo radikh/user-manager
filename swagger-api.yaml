@@ -1,0 +1,233 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: OpenAPI UserManagement
+paths:
+  /validate:
+    get:
+      summary: 'Validate account'
+      description: 'Read credentials from http headers, validate them,
+                    and return context values that will be used by other components
+                    of the system in subsequent calls.'
+      tags:
+        - validate
+      responses:
+        200:
+          description: 'An account info'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountInfo'
+        401:
+          description: 'Authenticate failed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: 'Account does not exist'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: 'Unexpected error'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - basicAuth: []
+  /account:
+    get:
+      summary: 'Account info'
+      description: 'Read credentials from http headers and
+                   return information about the user that owns that credentials.'
+      tags:
+        - account
+      responses:
+        200:
+          description: 'An account info'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountInfo'
+        401:
+          description: 'Authenticate failed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: 'Account does not exist'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: 'Unexpected error'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - basicAuth: []
+    post:
+      summary: 'Create new account'
+      description: 'Create new user account.'
+      tags:
+        - account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountCreate'
+        required: true
+      responses:
+        201:
+          description: 'Successfully created'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountInfo'
+        400:
+          description: 'Bad request'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        409:
+          description: 'Login in use'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: 'Unexpected error'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: 'Update account'
+      description: 'Changing user related data.'
+      tags:
+        - account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountUpdate'
+        required: true
+      responses:
+        200:
+          description: 'Successfully updated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountInfo'
+        400:
+          description: 'Bad request'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        401:
+          description: 'Authenticate failed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: 'Account does not exist'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: 'Unexpected error'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - basicAuth: []
+    delete:
+      summary: 'Delete account'
+      description: 'Delete account.'
+      tags:
+        - account
+      responses:
+        204:
+          description: 'Successfully deleted'
+        401:
+          description: 'Authenticate failed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: 'Account does not exist'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: 'Unexpected error'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - basicAuth: []
+
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+  schemas:
+    AccountCreate:
+      required:
+        - username
+        - password
+        - email
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        email:
+          type: string
+    AccountUpdate:
+      properties:
+        password:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+    AccountInfo:
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+    Error:
+      properties:
+        code:
+          type: string
+        message:
+          type: string
