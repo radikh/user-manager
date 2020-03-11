@@ -1,9 +1,7 @@
-// Package storage provides storage implementation.
-// Information about all users will be stored in a database.
-// Service uses PostgreSQL as a storage.
-// Package presents [C][R][U][D] operations for manipulation of users, such as
-// Сreate new user,
-// Get information about exists user,
-// [C][R][U]pdate[D] exists user,
-// [C][R][U][D]elete unnecessary user.
+// Package storage provides implementation for persisting user information.
+// It includes the following methods:
+// - create new user
+// - get information about exists user
+// - update exists user
+// - delete unnecessary user
 package storage

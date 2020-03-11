@@ -1,10 +1,9 @@
-// Package provides UM CLI implementation
-// to manipulate accounts with admin rights.
-// Package presents the following opportunities:
-// Create a user
-// Delete a user by login
-// Disable a user by login
-// Get user information by login except of password hash and salt
+// Command umcli provides admin command line tool to manipulate accounts with admin rights.
+// CLI tool allows:
+// - create a user
+// - delete a user by login
+// - disable a user by login
+// - get user information by login except of password hash and salt
 package main
 
 func main() {
