@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+  db:
+    image: "postgres"
+    restart: unless-stopped
+    networks:
+      - "mylocal"
+    env_file:
+      - ".env"
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+    ports:
+      - 7777:5432
+
+  migrator:
+    networks:
+      - "mylocal"
+    build: ./migrator
+    env_file:
+      - ".env"
+    command: ["-path", "./migrations", "-database",  "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB?sslmode=disable", "$MIGRATE_DIRECTION", "$MIGRATE_NUM"]
+    depends_on: 
+      - db
+      
+
+networks:
+  mylocal:
+    driver: bridge
