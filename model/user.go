@@ -1,5 +1,9 @@
-// Package model include User struct,
-// which provides all necessary fields about each user
+// Package model includes User structure,
+// which provides all necessary fields about each user.
+// Each user has the following information:
+// unique user identifier (ID), user login with password,
+// valid email, first and last name and phone number.
+// Besides it, this model will record time when user was created and time of last updates.
 package model
 
 import (
