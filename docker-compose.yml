@@ -5,7 +5,7 @@ services:
     image: "postgres"
     restart: unless-stopped
     networks:
-      - "mylocal"
+      - "gpsnet"
     env_file:
       - ".env"
     volumes:
@@ -14,16 +14,18 @@ services:
       - 7777:5432
 
   migrator:
+    image: "migrate/migrate"
     networks:
-      - "mylocal"
-    build: ./migrator
+      - "gpsnet"
+    volumes: 
+      - ./migrations:/migrations
     env_file:
       - ".env"
-    command: ["-path", "./migrations", "-database",  "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB?sslmode=disable", "$MIGRATE_DIRECTION", "$MIGRATE_NUM"]
+    command: ["-path", "./migrations", "-database",  "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB?sslmode=disable", "$MIGRATE_DIRECTION", "$MIGRATE_NUM", "$UM_PASSWORD"]
     depends_on: 
       - db
       
 
 networks:
-  mylocal:
+  gpsnet:
     driver: bridge
