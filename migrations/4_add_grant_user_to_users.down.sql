@@ -1,1 +1,0 @@
-REVOKE SELECT, INSERT, UPDATE  ON users FROM gateway;
