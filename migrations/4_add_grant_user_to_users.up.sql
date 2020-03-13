@@ -1,1 +1,0 @@
-GRANT SELECT, INSERT, UPDATE  ON users TO gateway;
