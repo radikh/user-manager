@@ -1,3 +1,10 @@
+
+# Settings for VS code workspace
+*.code-workspace
+
+# Folder for mounted Postgres database
+db-data/
+
 # Binaries for programs and plugins
 .exe
 .exe~
@@ -16,3 +23,4 @@ vendor
 
 # IDE
 .idea
+
