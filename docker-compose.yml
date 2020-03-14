@@ -8,7 +8,7 @@ networks:
 services:
 
   mongo:
-    image: mongo:latest
+    image: mongo:4.1
     networks:
       - gpsnet
   
@@ -28,12 +28,6 @@ services:
   
   graylog:
     image: graylog/graylog:3.2
-    environment:
-      # CHANGE ME (must be at least 16 characters)!
-      - GRAYLOG_PASSWORD_SECRET=somepasswordpepper
-      # Password: admin
-      - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
-      - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
     networks:
       - gpsnet
     depends_on:
@@ -52,60 +46,83 @@ services:
       - 12201:12201/udp
   
      
-  postgres:
-    image: "postgres:12.2"
-    restart: unless-stopped
+  db:
+    image: postgres:12.2
+    restart: always
     networks:
-      - "gpsnet"
+      - gpsnet
     env_file:
-      - "storage/.env"
+      - .env
     volumes:
       - ./db-data:/var/lib/postgresql/data
+      - ./migrator/init:/docker-entrypoint-initdb.d/
     ports:
       - 5432:5432
-  
-      
+
   migrator:
-    image: "migrate/migrate"
+    image: migrate/migrate
     networks:
-      - "gpsnet"
+      - gpsnet
     volumes: 
-      - ./migrations:/migrations
+      - ./migrator/migrations:/migrations
+    environment:
+      - UM_PASSWORD
     env_file:
-      - "storage/.env"
+      - .env
     command: ["-path", "./migrations", "-database",  "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB?sslmode=disable", "up"]
     depends_on: 
-      - postgres
+      - db
 
 
 
-  consul:
-    image: consul:1.7.1
-    container_name: consul
+  consul-agent-1: &consul-agent
+    image: consul:latest
     networks:
       - gpsnet
-    ports:
-      - 8500:8500
-
-
-  usermanager:
-    container_name: usermanager
-    image: "github.com/lvl484/user-manager"
+    command: "agent -retry-join consul-server-bootstrap -client 0.0.0.0"
+  
+  consul-agent-2:
     networks:
       - gpsnet
+    build: ./config/consul_registr
+    command: "-retry-join consul-server-bootstrap -client 0.0.0.0"
+    depends_on:
+    - consul-server-bootstrap
+
+  consul-server-1: &consul-server
+    <<: *consul-agent
+    command: "agent -server -retry-join consul-server-bootstrap -client 0.0.0.0"
+
+  consul-server-2:
+    <<: *consul-server
+
+  consul-server-bootstrap:
+    <<: *consul-agent
     ports:
-      - "8000:8000"
-      - "8001:8001"
-    env_file:
-      - ./userApp/.env
-    build:
-      dockerfile: Dockerfile
-      context: ./userApp
-    environment:
-      - SERVICE_NAME=usermanager
-      - BIND_IP=0.0.0.0
-      - BIND_PORT=8000
-      - BIND_DEBUG_PORT=8001
-      - CONSUL_ADDRESS=consul:8500
+      - "8400:8400"
+      - "8500:8500"
+      - "8600:8600"
+      - "8600:8600/udp"
+    command: "agent -server -bootstrap-expect 3 -ui -client 0.0.0.0"
+  
+#  usermanager:
+#    container_name: usermanager
+#    image: "github.com/lvl484/user-manager"
+#    networks:
+#      - gpsnet
+#    ports:
+#      - "8000:8000"
+#      - "8001:8001"
+#    env_file:
+#      - ./userApp/.env
+#    build:
+#      dockerfile: Dockerfile
+#      context: ./userApp
+#    environment:
+#      - SERVICE_NAME=usermanager
+#      - BIND_IP=0.0.0.0
+#      - BIND_PORT=8000
+#      - BIND_DEBUG_PORT=8001
+#      - CONSUL_ADDRESS=consul:8500
           
-      
+     
