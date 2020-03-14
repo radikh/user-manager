@@ -1,0 +1,111 @@
+version: '3'
+
+networks:
+  gpsnet:
+    driver: bridge
+
+
+services:
+
+  mongo:
+    image: mongo:latest
+    networks:
+      - gpsnet
+  
+  elasticsearch:
+    image:  docker.elastic.co/elasticsearch/elasticsearch:7.6.1
+    environment:
+      - http.host=0.0.0.0
+      - transport.host=localhost
+      - network.host=0.0.0.0
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - gpsnet
+  
+  graylog:
+    image: graylog/graylog:3.2
+    environment:
+      # CHANGE ME (must be at least 16 characters)!
+      - GRAYLOG_PASSWORD_SECRET=somepasswordpepper
+      # Password: admin
+      - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+      - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
+    networks:
+      - gpsnet
+    depends_on:
+      - mongo
+      - elasticsearch
+    ports:
+      # Graylog web interface and REST API
+      - 9000:9000
+      # Syslog TCP
+      - 1514:1514
+      # Syslog UDP
+      - 1514:1514/udp
+      # GELF TCP
+      - 12201:12201
+      # GELF UDP
+      - 12201:12201/udp
+  
+     
+  postgres:
+    image: "postgres:12.2"
+    restart: unless-stopped
+    networks:
+      - "gpsnet"
+    env_file:
+      - "storage/.env"
+    volumes:
+      - ./db-data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+  
+      
+  migrator:
+    image: "migrate/migrate"
+    networks:
+      - "gpsnet"
+    volumes: 
+      - ./migrations:/migrations
+    env_file:
+      - "storage/.env"
+    command: ["-path", "./migrations", "-database",  "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB?sslmode=disable", "up"]
+    depends_on: 
+      - postgres
+
+
+
+  consul:
+    image: consul:1.7.1
+    container_name: consul
+    networks:
+      - gpsnet
+    ports:
+      - 8500:8500
+
+
+  usermanager:
+    container_name: usermanager
+    image: "github.com/lvl484/user-manager"
+    networks:
+      - gpsnet
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    env_file:
+      - ./userApp/.env
+    build:
+      dockerfile: Dockerfile
+      context: ./userApp
+    environment:
+      - SERVICE_NAME=usermanager
+      - BIND_IP=0.0.0.0
+      - BIND_PORT=8000
+      - BIND_DEBUG_PORT=8001
+      - CONSUL_ADDRESS=consul:8500
+          
+      
