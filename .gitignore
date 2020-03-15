@@ -1,7 +1,15 @@
+<<<<<<< HEAD
 # Settings for VS Code programs
 *.code-workspace
 
 # Volumes for local storage of database
+=======
+
+# Settings for VS code workspace
+*.code-workspace
+
+# Folder for mounted Postgres database
+>>>>>>> master
 db-data/
 
 # Binaries for programs and plugins
@@ -21,4 +29,9 @@ db-data/
 vendor
 
 # IDE
+<<<<<<< HEAD
 .idea
+=======
+.idea
+
+>>>>>>> master

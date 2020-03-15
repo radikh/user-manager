@@ -1,1 +1,1 @@
-GRANT SELECT, INSERT, UPDATE  ON users TO gateway;
+GRANT SELECT, INSERT, UPDATE  ON users TO um_user;
