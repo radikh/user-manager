@@ -5,7 +5,7 @@ up: ##build and run project in docker conteiner
 
 
 test: ##run test
-	@go test -v ./...
+	  ##This task for future		
     
 
 
