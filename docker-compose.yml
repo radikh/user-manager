@@ -67,8 +67,7 @@ services:
       - gpsnet
     volumes: 
       - ./migrator/migrations:/migrations
-    environment:
-      - UM_PASSWORD
+    
     env_file:
       - .env
     command: ["-path", "./migrations", "-database",  "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB?sslmode=disable", "up"]
@@ -107,23 +106,18 @@ services:
       - "8600:8600/udp"
     command: "agent -server -bootstrap-expect 3 -ui -client 0.0.0.0"
   
-#  usermanager:
-#    image: "github.com/lvl484/user-manager"
-#    networks:
-#      - gpsnet
-#    ports:
-#      - "8000:8000"
-#      - "8001:8001"
-#    env_file:
-#      - ./userApp/.env
-#    build:
-#      dockerfile: Dockerfile
-#      context: ./userApp
-#    environment:
-#      - SERVICE_NAME=usermanager
-#      - BIND_IP=0.0.0.0
-#      - BIND_PORT=8000
-#      - BIND_DEBUG_PORT=8001
-#      - CONSUL_ADDRESS=consul:8500
+  usermanager:
+    image: github.com/lvl484/user-manager
+    networks:
+      - gpsnet
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    env_file:
+      - .env
+    build:
+      dockerfile: Dockerfile
+      context: .
+      
           
      
