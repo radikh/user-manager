@@ -10,7 +10,7 @@ test: ##run test
 
 
 kvput: ##put value into  consul kv store
-	@./config/register-variables.sh
+	@./infra/consul/register-variables.sh
 	
 down: ##stop and remobe all conteiner
 	@docker-compose down --remove-orphans

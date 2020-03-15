@@ -17,8 +17,8 @@ COPY storage         storage
 COPY go.*            ./
 
 WORKDIR /opt/resource/cmd/umserver
-RUN go build -o /opt/services/example-app .
+RUN go build -o /opt/services/user-manager .
 
 FROM alpine:3.7
-COPY --from=builder /opt/services/example-app /opt/services/example-app
-CMD /opt/services/example-app
+COPY --from=builder /opt/services/user-manager /opt/services/user-manager
+CMD /opt/services/user-manager
