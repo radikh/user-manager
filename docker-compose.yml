@@ -77,7 +77,7 @@ services:
 
 
   consul-agent-1: &consul-agent
-    image: consul:latest
+    image: consul:1.7.1
     networks:
       - gpsnet
     command: "agent -retry-join consul-server-bootstrap -client 0.0.0.0"
@@ -86,7 +86,7 @@ services:
     networks:
       - gpsnet
     build: ./config/consul_registr
-    command: "-retry-join consul-server-bootstrap -client 0.0.0.0"
+    command: "-retry-join consul-server-bootstrap -client 0.0.0.0"&&""
     depends_on:
     - consul-server-bootstrap
 
