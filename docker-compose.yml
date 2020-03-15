@@ -32,6 +32,9 @@ services:
       - gpsnet
     env_file:
       - .env
+    links:
+      - mongo
+      - elasticsearch
     depends_on:
       - mongo
       - elasticsearch
@@ -73,20 +76,13 @@ services:
     command: ["-path", "./migrations", "-database",  "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB?sslmode=disable", "up"]
     depends_on: 
       - db
-
-
-
+     
   consul-agent-1: &consul-agent
     image: consul:1.7.1
     networks:
       - gpsnet
-    command: "agent -retry-join consul-server-bootstrap -client 0.0.0.0"
-  
-  consul-agent-2:
-    networks:
-      - gpsnet
-    build: ./config/consul_registr
-    command: "-retry-join consul-server-bootstrap -client 0.0.0.0"&&""
+    build: ./infra/consul/consul_registr
+    command: "-retry-join consul-server-bootstrap -client 0.0.0.0"
     depends_on:
     - consul-server-bootstrap
 
@@ -118,6 +114,8 @@ services:
     build:
       dockerfile: Dockerfile
       context: .
-      
-          
+    depends_on:  
+      - db
+      - graylog
+      - consul     
      
