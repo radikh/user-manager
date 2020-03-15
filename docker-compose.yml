@@ -2,7 +2,7 @@
 
   services:
     db:
-      image: "postgres:9.6.17"
+      image: "postgres:12"
       restart: unless-stopped
       networks:
         - "gpsnet"
@@ -12,7 +12,7 @@
         - ./db-data:/var/lib/postgresql/data
         - ./migrator/init:/docker-entrypoint-initdb.d/
       ports:
-        - 7777:5432
+        - 5432:5432
 
     migrator:
       image: "migrate/migrate"
@@ -20,8 +20,6 @@
         - "gpsnet"
       volumes: 
         - ./migrator/migrations:/migrations
-      environment:
-          - UM_PASSWORD
       env_file:
         - ".env"
       command: ["-path", "./migrations", "-database",  "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB?sslmode=disable", "up"]
