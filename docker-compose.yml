@@ -30,6 +30,8 @@ services:
     image: graylog/graylog:3.2
     networks:
       - gpsnet
+    env_file:
+      - .env
     depends_on:
       - mongo
       - elasticsearch
@@ -106,7 +108,6 @@ services:
     command: "agent -server -bootstrap-expect 3 -ui -client 0.0.0.0"
   
 #  usermanager:
-#    container_name: usermanager
 #    image: "github.com/lvl484/user-manager"
 #    networks:
 #      - gpsnet

@@ -1,14 +1,11 @@
-docker_up:
-	@docker-compose up -d
+up:
+	@docker-compose up --build
 
-consul_up:
-	@./register-services.sh && \
-	 ./register-variables.sh
 
 
 test:
 	
-up: docker_up consul_up
+
 
 down:
-	@docker-compose down
+	@docker-compose down --remove-orphans
