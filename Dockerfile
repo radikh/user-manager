@@ -8,13 +8,7 @@ RUN mkdir -p /opt/resource/
 COPY --from=modules /go/pkg/ /go/pkg/
 
 WORKDIR /opt/resource/
-COPY cmd             cmd
-COPY config          config
-COPY middleware      middleware
-COPY model           model
-COPY server          server
-COPY storage         storage
-COPY go.*            ./
+COPY . .
 
 WORKDIR /opt/resource/cmd/umserver
 RUN go build -o /opt/services/user-manager .

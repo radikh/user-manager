@@ -25,10 +25,10 @@ User is the central model of the service:
 Service will use PostgreSQL as a storage for user data. All passwords have to be saved securely using hashing algorithms and saults. Access rights for the service SQL user have to be exactly the same that required to cover needed queries requirements. Database connection have to be able to recover after disconnect.
 
 ###### Database migration
-PostgreSQL database is migrate from oficial image postgres:9.6.17. Initial structure of database is done with "Database migrations. CLI and Golang library." https://github.com/golang-migrate/migrate using Docker image for golang-migrate binary  https://hub.docker.com/r/migrate/migrate/.
+PostgreSQL database is migrate from oficial image postgres:12.2 Initial structure of database is done with "Database migrations. CLI and Golang library." https://github.com/golang-migrate/migrate using Docker image for golang-migrate binary  https://hub.docker.com/r/migrate/migrate/.
 Queries are placed in folder "migrations" and must named as N____.up.sql or N___.down.sql, where N means the order of executing.
 Execution of migration
-    #docker-compose up -d db
+    
     #docker-compose up -d
 
 #### Admin panel
@@ -41,3 +41,5 @@ CLI tool should be capable:
 - Get user information by login except of password hash and salt 
 
 CLI tool can be implemented both as a part of the service or as a separate tool.
+
+
