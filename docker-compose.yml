@@ -16,6 +16,7 @@
 
     migrator:
       image: "migrate/migrate"
+      restart: on-failure:10
       networks:
         - "gpsnet"
       volumes: 
