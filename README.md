@@ -25,7 +25,7 @@ User is the central model of the service:
 Service will use PostgreSQL as a storage for user data. All passwords have to be saved securely using hashing algorithms and saults. Access rights for the service SQL user have to be exactly the same that required to cover needed queries requirements. Database connection have to be able to recover after disconnect.
 
 ##### Database migration
-PostgreSQL database is migrate from oficial image postgres:12.2. Initial structure of database is done with "Database migrations. CLI and Golang library." (https://github.com/golang-migrate/migrate "GitHub")using Docker image for golang-migrate binary  (https://hub.docker.com/r/migrate/migrate/ "Hub Docker"). 
+PostgreSQL database is migrate from oficial image postgres:12.2. Initial structure of database is done with "Database migrations. CLI and Golang library." [Database migrations on GitHub](https://github.com/golang-migrate/migrate )using Docker image for golang-migrate binary  [Image of migration on Hub Docker](https://hub.docker.com/r/migrate/migrate/). 
 
 Queries are placed in folder "migrations" and must named as N____.up.sql or N___.down.sql, where N means the order of executing. 
 
