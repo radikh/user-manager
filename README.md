@@ -42,4 +42,14 @@ CLI tool should be capable:
 
 CLI tool can be implemented both as a part of the service or as a separate tool.
 
+#### Start all services
 
+You must create .env  file in the root of project with environment variables as in 
+
+    env.example
+
+Commands for build all infrastructure
+
+    make up
+
+Some other commands  for working with this project your can find in Makefile
