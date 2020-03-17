@@ -48,6 +48,8 @@ You must create .env  file in the root of project with environment variables as 
 
     env.example
 
+**Note!!! Your .env file should be without comments**
+
 Commands for build all infrastructure
 
     make up
