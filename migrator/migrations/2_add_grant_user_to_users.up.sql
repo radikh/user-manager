@@ -1,1 +1,1 @@
-GRANT SELECT, INSERT, DELETE, UPDATE  ON users TO um_user;
+GRANT SELECT, INSERT, DELETE, UPDATE  ON public.users TO um_user;
