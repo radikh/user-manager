@@ -1,0 +1,10 @@
+#ignore folder 
+infra
+migrator
+
+#ignore file
+.*
+*.yml
+*.yaml
+*file
+*.md
