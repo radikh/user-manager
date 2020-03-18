@@ -1,12 +1,12 @@
 FROM golang:1.13 as modules
-ADD ./go.mod /m/
-RUN cd /m && go mod download
-FROM golang:1.13 as builder
+ADD go.mod /m/
+RUN cd /m && go mod download && mkdir -p /go/pkg/
 
-RUN mkdir -p /opt/resource/
+FROM golang:1.13 as builder
 
 COPY --from=modules /go/pkg/ /go/pkg/
 
+RUN mkdir -p /opt/resource/ 
 WORKDIR /opt/resource/
 COPY . .
 
