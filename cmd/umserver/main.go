@@ -55,7 +55,7 @@ func main() {
 	log.Print("Server is Stopping...")
 
 	// Stop application
-	err := gracefulShutdown(wg, srv)
+	err := gracefulShutdown(GracefulShutdownTimeOut, wg, srv)
 	if err != nil {
 		log.Fatalf("Server graceful shutdown failed: %v", err)
 	}
@@ -64,8 +64,8 @@ func main() {
 	os.Exit(code)
 }
 
-func gracefulShutdown(wg *sync.WaitGroup, srv *http.Server) error {
-	ctx, cancel := context.WithTimeout(context.Background(), GracefulShutdownTimeOut)
+func gracefulShutdown(timeout time.Duration, wg *sync.WaitGroup, srv *http.Server) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 
 	// Shutdown HTTP server
 	go func() {
