@@ -1,3 +1,9 @@
+# Settings for VS Code programs
+*.code-workspace
+
+# Volumes for local storage of database
+db-data/
+
 # Binaries for programs and plugins
 .exe
 .exe~

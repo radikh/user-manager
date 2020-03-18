@@ -1,0 +1,1 @@
+REVOKE SELECT, INSERT, DELETE, UPDATE  ON public.users FROM um_user;
