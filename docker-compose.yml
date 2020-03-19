@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 version: '3'
 
 networks:
@@ -50,29 +51,29 @@ services:
       - 12201:12201/udp
   
   db:
-    image: postgres:12.2
-    restart: always
+    image: "postgres:12.2"
+    restart: unless-stopped
     networks:
-      - gpsnet
+      - "gpsnet"
     env_file:
-      - .env
+      - ".env"
     volumes:
       - ./db-data:/var/lib/postgresql/data
       - ./migrator/init:/docker-entrypoint-initdb.d/
     ports:
       - 5432:5432
-
   migrator:
-    image: migrate/migrate
+    image: "migrate/migrate"
+    restart: on-failure:10
     networks:
-      - gpsnet
+      - "gpsnet"
     volumes: 
       - ./migrator/migrations:/migrations
     env_file:
-      - .env
+      - ".env"
     command: ["-path", "./migrations", "-database",  "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB?sslmode=disable", "up"]
     depends_on: 
-      - db
+      - "db"
      
   consul-agent: 
     networks:
