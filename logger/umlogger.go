@@ -3,8 +3,9 @@
 package logger
 
 import (
-	"os"
 	"fmt"
+	"os"
+
 	log "github.com/sirupsen/logrus"
 	graylog "gopkg.in/gemnasium/logrus-graylog-hook.v2"
 )
@@ -18,40 +19,54 @@ type LogConfig struct {
 	Output      string
 }
 
-
+// NullFormatter structure for creating null formatter for logger
 type NullFormatter struct {
 }
 
-// Don't spend time formatting logs
+// Format config loger with nullformatter, that is onlly log to Graylog, with out ouput to file or stdout
 func (NullFormatter) Format(e *log.Entry) ([]byte, error) {
-    return []byte{}, nil
-    }
+	return []byte{}, nil
 }
 
-func NewLogger(lc *LogConfig) {
+// NewLogger initialized logger according to configuration
+func NewLogger(lc *LogConfig) error {
 	switch lc.Output {
 	case "Stdout":
-		// Log as default ASCII formatter.
 		log.SetFormatter(&log.TextFormatter{})
 		log.SetOutput(os.Stdout)
 	case "File":
-		   // open a file
-		   f, err := os.OpenFile("user_manager_api.log", os.O_APPEND | os.O_CREATE | os.O_RDWR, 0666)
-		   if err != nil {
-			   fmt.Printf("error opening file: %v", err)
-		   }
-		   // Log as JSON formatter.
-		   log.SetFormatter(&log.JSONFormatter{})
-		   log.SetOutput(f)	
-	default:
-		graylog_adr := fmt.Sprinf("%v:%v", lc.Host, lc.Port)
+		f, err := os.OpenFile("user_manager_api.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+		if err != nil {
+			fmt.Printf("error opening file: %v", err)
+		}
+		log.SetFormatter(&log.JSONFormatter{})
+		log.SetOutput(f)
+	case "Graylog":
+		graylog_adr := fmt.Sprintf("%v:%v", lc.Host, lc.Port)
 		hook := graylog.NewGraylogHook(graylog_adr, map[string]interface{}{"API": "User management service"})
-		log.Hooks.Add(hook)
-		log.SetFormatter(new(NullFormatter)) 
+		log.AddHook(hook)
+		log.SetFormatter(new(NullFormatter))
+	default:
+		return fmt.Errorf("Error logger configure output destination <%v> < should be Graylog, Stdout or File", lc.Output)
 	}
- log.SetLevel(log.PanicLevel)	   
+	log.SetLevel(log.PanicLevel)
+	return nil
 }
 
-func Message(m *logrus.Message) {
-	log.
+// Message log message depending to log level
+func Message(level log.Level, m string) {
+	switch level {
+	case log.DebugLevel:
+		log.Debug(m)
+	case log.InfoLevel:
+		log.Info(m)
+	case log.WarnLevel:
+		log.Warn(m)
+	case log.ErrorLevel:
+		log.Error(m)
+	case log.FatalLevel:
+		log.Fatal(m)
+	case log.PanicLevel:
+		log.Panic(m)
+	}
 }
