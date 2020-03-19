@@ -1,7 +1,6 @@
 #ignore folder 
 infra
 migrator
-
 #ignore file
 .*
 *.yml

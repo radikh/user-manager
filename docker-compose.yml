@@ -4,7 +4,6 @@ networks:
   gpsnet:
     driver: bridge
 
-
 services:
 
   mongo:
@@ -69,7 +68,6 @@ services:
       - gpsnet
     volumes: 
       - ./migrator/migrations:/migrations
-    
     env_file:
       - .env
     command: ["-path", "./migrations", "-database",  "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB?sslmode=disable", "up"]
@@ -120,5 +118,3 @@ services:
       - db
       - migrator
       - graylog
-           
-     
