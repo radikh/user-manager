@@ -14,6 +14,9 @@ db-data/
 # Test binary, built with `go test -c`
 .test
 
+# Configs
+*.config.json
+
 # Output of the go coverage tool, specifically when used with LiteIDE
 .out
 

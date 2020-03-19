@@ -1,0 +1,9 @@
+{
+    "logger": {
+        "Host": "localhost",
+        "port": 12201,
+        "Pass_Secret": "usermanagerlvl48",
+        "Pass_SHA2": "9cc1ee455a3363ffc504f40006f70d0c8276648a5d3eb3f9524e94d1b7a83aef",
+        "Output": "Graylog"
+    }
+}
