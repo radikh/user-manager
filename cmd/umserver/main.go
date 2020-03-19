@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-const GracefulShutdownTimeOut = 10 * time.Second
+const gracefulShutdownTimeOut = 10 * time.Second
 
 func main() {
 	var (
@@ -55,7 +55,7 @@ func main() {
 	log.Print("Server is Stopping...")
 
 	// Stop application
-	err := gracefulShutdown(GracefulShutdownTimeOut, wg, srv)
+	err := gracefulShutdown(gracefulShutdownTimeOut, wg, srv)
 	if err != nil {
 		log.Fatalf("Server graceful shutdown failed: %v", err)
 	}
