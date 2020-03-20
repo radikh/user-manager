@@ -1,0 +1,9 @@
+{
+    "logger_um": {
+        "Host": "GREYLOGHOST",
+        "port": 77777,
+        "Pass_Secret": "secretpassword",
+        "Pass_SHA2": "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
+        "Output": "Graylog"
+    }
+}
