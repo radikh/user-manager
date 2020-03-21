@@ -44,3 +44,17 @@ CLI tool should be capable:
 - Get user information by login except of password hash and salt 
 
 CLI tool can be implemented both as a part of the service or as a separate tool.
+
+#### Start all services
+
+You must create .env  file in the root of project with environment variables as in 
+
+    env.example
+
+**Note!!! Your .env file should be without comments**
+
+Commands for build all infrastructure
+
+    make up
+
+Some other commands  for working with this project your can find in Makefile
