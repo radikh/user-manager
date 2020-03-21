@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"reflect"
 	"strings"
@@ -80,17 +79,12 @@ func TestNullFormatter_Format(t *testing.T) {
 
 func TestNewLogger(t *testing.T) {
 	v := viper.New()
-	v.AddConfigPath("../config/")
-	v.SetConfigName("viper.config")
+	v.AddConfigPath("../config/testdata/")
+	v.SetConfigName("testvipercfg")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	if err := v.ReadInConfig(); err != nil {
 		t.Error(err)
-	}
-
-	_, err := os.OpenFile("user_manager_api.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
-	if err != nil {
-		fmt.Printf("error opening file: %v", err)
 	}
 
 	conf := &LogConfig{
@@ -101,11 +95,11 @@ func TestNewLogger(t *testing.T) {
 		Output:     v.GetString(loggerOutput),
 	}
 	incorrectConf := &LogConfig{
-		Host:        "locallviv",
-		Port:        "15000",
-		Pass_Secret: "root",
-		Pass_SHA2:   "asdfsdfdsfewffsdvsvdsvfdsvsvsd",
-		Output:      "Greenlog",
+		Host:       "locallviv",
+		Port:       "15000",
+		PassSecret: "root",
+		PassSHA2:   "asdfsdfdsfewffsdvsvdsvfdsvsvsd",
+		Output:     "Greenlog",
 	}
 	conf_file := &LogConfig{
 		Output: "File",
@@ -149,129 +143,98 @@ func TestNewLogger(t *testing.T) {
 	}
 }
 
-func TestMessage(t *testing.T) {
-	logger := log.New()
-	logger.Out = &bytes.Buffer{}
-	_ = log.NewEntry(logger)
-	log.SetLevel(log.PanicLevel)
-
-	type args struct {
-		level log.Level
-		m     string
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		{
-			name: "Debug",
-			args: args{level: log.DebugLevel, m: "Debug level"},
-		}, {
-			name: "Warn",
-			args: args{level: log.WarnLevel, m: "Warn level"},
-		}, {
-			name: "Error",
-			args: args{level: log.ErrorLevel, m: "Error level"},
-		}, {
-			name: "Info",
-			args: args{level: log.InfoLevel, m: "Info level"},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			Message(tt.args.level, tt.args.m)
-		})
-	}
-}
-
 func TestLogConfig_setLoggerToFile(t *testing.T) {
-	type fields struct {
-		Host       string
-		Port       string
-		PassSecret string
-		PassSHA2   string
-		Output     string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			lc := &LogConfig{
-				Host:       tt.fields.Host,
-				Port:       tt.fields.Port,
-				PassSecret: tt.fields.PassSecret,
-				PassSHA2:   tt.fields.PassSHA2,
-				Output:     tt.fields.Output,
-			}
-			if err := lc.setLoggerToFile(); (err != nil) != tt.wantErr {
-				t.Errorf("LogConfig.setLoggerToFile() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
+
+	_, err := os.OpenFile("user_manager_api.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+
+	if err != nil {
+		t.Errorf("LogConfig.setLoggerToFile() error = %v", err)
 	}
 }
 
 func TestLogConfig_setLoggerToStdout(t *testing.T) {
-	type fields struct {
-		Host       string
-		Port       string
-		PassSecret string
-		PassSHA2   string
-		Output     string
+
+	conf_file := &LogConfig{
+		Output: "Filename",
 	}
+	conf_stdout := &LogConfig{
+		Output: "Stdout",
+	}
+
 	tests := []struct {
 		name    string
-		fields  fields
+		lc      *LogConfig
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name:    "Incorect",
+			lc:      conf_file,
+			wantErr: true,
+		}, {
+			name:    "Correct",
+			lc:      conf_stdout,
+			wantErr: false,
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			lc := &LogConfig{
-				Host:       tt.fields.Host,
-				Port:       tt.fields.Port,
-				PassSecret: tt.fields.PassSecret,
-				PassSHA2:   tt.fields.PassSHA2,
-				Output:     tt.fields.Output,
-			}
-			if err := lc.setLoggerToStdout(); (err != nil) != tt.wantErr {
-				t.Errorf("LogConfig.setLoggerToStdout() error = %v, wantErr %v", err, tt.wantErr)
+			err := NewLogger(tt.lc)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NewLogger() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
 		})
 	}
 }
 
 func TestLogConfig_setLoggerToGraylog(t *testing.T) {
-	type fields struct {
-		Host       string
-		Port       string
-		PassSecret string
-		PassSHA2   string
-		Output     string
+	v := viper.New()
+	v.AddConfigPath("../config/testdata/")
+	v.SetConfigName("testvipercfg")
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	if err := v.ReadInConfig(); err != nil {
+		t.Error(err)
 	}
+
+	conf := &LogConfig{
+		Host:       v.GetString(loggerHost),
+		Port:       v.GetString(loggerPort),
+		PassSecret: v.GetString(loggerPassSecret),
+		PassSHA2:   v.GetString(loggerPassSHA2),
+		Output:     v.GetString(loggerOutput),
+	}
+	incorrectConf := &LogConfig{
+		Host:       "locallviv",
+		Port:       "15000",
+		PassSecret: "root",
+		PassSHA2:   "asdfsdfdsfewffsdvsvdsvfdsvsvsd",
+		Output:     "Greenlog",
+	}
+
 	tests := []struct {
 		name    string
-		fields  fields
+		lc      *LogConfig
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name:    "CorrectConfig1",
+			lc:      conf,
+			wantErr: false,
+		}, {
+			name:    "IncorrectConfig",
+			lc:      incorrectConf,
+			wantErr: true,
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			lc := &LogConfig{
-				Host:       tt.fields.Host,
-				Port:       tt.fields.Port,
-				PassSecret: tt.fields.PassSecret,
-				PassSHA2:   tt.fields.PassSHA2,
-				Output:     tt.fields.Output,
-			}
-			if err := lc.setLoggerToGraylog(); (err != nil) != tt.wantErr {
-				t.Errorf("LogConfig.setLoggerToGraylog() error = %v, wantErr %v", err, tt.wantErr)
+			err := NewLogger(tt.lc)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NewLogger() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
 		})
 	}
