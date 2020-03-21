@@ -13,6 +13,8 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	_ "github.com/lib/pq"
 )
 
 const gracefulShutdownTimeOut = 10 * time.Second
@@ -39,6 +41,17 @@ func main() {
 	}()
 	log.Printf("Server Listening at %s...", srv.Addr)
 
+	// TODO: There will be actual information about PostgreSQL connection in future
+	// ...
+	// TODO: There will be actual information about consul in future
+	// ...
+	// TODO: There will be actual information about kafka in future
+
+	relatedComponents := closingStructure{
+		// There will be all necessary related components,
+		// which  must be closed before main service shutdown
+	}
+
 	// Watch errors and os signals
 	interrupt, code := make(chan os.Signal, 1), 0
 	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
@@ -54,7 +67,7 @@ func main() {
 	log.Print("Server is Stopping...")
 
 	// Stop application
-	err := gracefulShutdown(gracefulShutdownTimeOut, wg, srv)
+	err := gracefulShutdown(gracefulShutdownTimeOut, wg, srv, &relatedComponents)
 	if err != nil {
 		log.Fatalf("Server graceful shutdown failed: %v", err)
 	}
