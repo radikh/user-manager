@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/lvl484/user-manager/logger"
+
 	"github.com/spf13/viper"
 )
 
@@ -39,7 +40,7 @@ func TestNewViperCfg(t *testing.T) {
 }
 
 func TestViperCfg_NewLoggerConfig(t *testing.T) {
-	v, err := NewViperCfg("testvipercfg", "../testdata/")
+	v, err := NewViperCfg("testvipercfg", "./testdata/")
 	if err != nil {
 		t.Errorf("Cant start test, err: %v", err)
 	}
@@ -58,11 +59,11 @@ func TestViperCfg_NewLoggerConfig(t *testing.T) {
 			name:   "test",
 			fields: fields{v: v.v},
 			want: &logger.LogConfig{
-				Host:        "GREYLOGHOST",
-				Port:        "77777",
-				Pass_Secret: "secretpassword",
-				Pass_SHA2:   "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
-				Output:      "Graylog",
+				Host:       "GREYLOGHOST",
+				Port:       "77777",
+				PassSecret: "secretpassword",
+				PassSHA2:   "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
+				Output:     "Graylog",
 			},
 			wantErr: false,
 		},

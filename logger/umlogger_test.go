@@ -17,11 +17,11 @@ import (
 )
 
 const (
-	loggerHost        = "logger_um.Host"
-	loggerPort        = "logger_um.Port"
-	loggerPass_Secret = "logger_um.Pass_Secret"
-	loggerPass_SHA2   = "logger_um.Pass_SHA2"
-	loggerOutput      = "logger_um.Output"
+	loggerHost       = "loggerUM.Host"
+	loggerPort       = "loggerUM.Port"
+	loggerPassSecret = "loggerUM.PassSecret"
+	loggerPassSHA2   = "loggerUM.PassSHA2"
+	loggerOutput     = "loggerUM.Output"
 )
 
 func TestNullFormatter_Format(t *testing.T) {
@@ -94,11 +94,11 @@ func TestNewLogger(t *testing.T) {
 	}
 
 	conf := &LogConfig{
-		Host:        v.GetString(loggerHost),
-		Port:        v.GetString(loggerPort),
-		Pass_Secret: v.GetString(loggerPass_Secret),
-		Pass_SHA2:   v.GetString(loggerPass_SHA2),
-		Output:      v.GetString(loggerOutput),
+		Host:       v.GetString(loggerHost),
+		Port:       v.GetString(loggerPort),
+		PassSecret: v.GetString(loggerPassSecret),
+		PassSHA2:   v.GetString(loggerPassSHA2),
+		Output:     v.GetString(loggerOutput),
 	}
 	incorrectConf := &LogConfig{
 		Host:        "locallviv",
@@ -180,6 +180,99 @@ func TestMessage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Message(tt.args.level, tt.args.m)
+		})
+	}
+}
+
+func TestLogConfig_setLoggerToFile(t *testing.T) {
+	type fields struct {
+		Host       string
+		Port       string
+		PassSecret string
+		PassSHA2   string
+		Output     string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lc := &LogConfig{
+				Host:       tt.fields.Host,
+				Port:       tt.fields.Port,
+				PassSecret: tt.fields.PassSecret,
+				PassSHA2:   tt.fields.PassSHA2,
+				Output:     tt.fields.Output,
+			}
+			if err := lc.setLoggerToFile(); (err != nil) != tt.wantErr {
+				t.Errorf("LogConfig.setLoggerToFile() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestLogConfig_setLoggerToStdout(t *testing.T) {
+	type fields struct {
+		Host       string
+		Port       string
+		PassSecret string
+		PassSHA2   string
+		Output     string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lc := &LogConfig{
+				Host:       tt.fields.Host,
+				Port:       tt.fields.Port,
+				PassSecret: tt.fields.PassSecret,
+				PassSHA2:   tt.fields.PassSHA2,
+				Output:     tt.fields.Output,
+			}
+			if err := lc.setLoggerToStdout(); (err != nil) != tt.wantErr {
+				t.Errorf("LogConfig.setLoggerToStdout() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestLogConfig_setLoggerToGraylog(t *testing.T) {
+	type fields struct {
+		Host       string
+		Port       string
+		PassSecret string
+		PassSHA2   string
+		Output     string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lc := &LogConfig{
+				Host:       tt.fields.Host,
+				Port:       tt.fields.Port,
+				PassSecret: tt.fields.PassSecret,
+				PassSHA2:   tt.fields.PassSHA2,
+				Output:     tt.fields.Output,
+			}
+			if err := lc.setLoggerToGraylog(); (err != nil) != tt.wantErr {
+				t.Errorf("LogConfig.setLoggerToGraylog() error = %v, wantErr %v", err, tt.wantErr)
+			}
 		})
 	}
 }

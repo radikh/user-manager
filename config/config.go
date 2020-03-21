@@ -7,15 +7,16 @@ import (
 	"strings"
 
 	"github.com/lvl484/user-manager/logger"
+
 	"github.com/spf13/viper"
 )
 
 const (
-	loggerHost        = "logger_um.Host"
-	loggerPort        = "logger_um.Port"
-	loggerPass_Secret = "logger_um.Pass_Secret"
-	loggerPass_SHA2   = "logger_um.Pass_SHA2"
-	loggerOutput      = "logger_um.Output"
+	loggerHost       = "loggerUM.Host"
+	loggerPort       = "loggerUM.Port"
+	loggerPassSecret = "loggerUM.PassSecret"
+	loggerPassSHA2   = "loggerUM.PassSHA2"
+	loggerOutput     = "loggerUM.Output"
 )
 
 type ViperCfg struct {
@@ -38,10 +39,10 @@ func NewViperCfg(configName, configPath string) (*ViperCfg, error) {
 // NewPostgresConfig returns pointer to PointerConfig with data read from viper.config.json
 func (vpcfg *ViperCfg) NewLoggerConfig() (*logger.LogConfig, error) {
 	return &logger.LogConfig{
-		Host:        vpcfg.v.GetString(loggerHost),
-		Port:        vpcfg.v.GetString(loggerPort),
-		Pass_Secret: vpcfg.v.GetString(loggerPass_Secret),
-		Pass_SHA2:   vpcfg.v.GetString(loggerPass_SHA2),
-		Output:      vpcfg.v.GetString(loggerOutput),
+		Host:       vpcfg.v.GetString(loggerHost),
+		Port:       vpcfg.v.GetString(loggerPort),
+		PassSecret: vpcfg.v.GetString(loggerPassSecret),
+		PassSHA2:   vpcfg.v.GetString(loggerPassSHA2),
+		Output:     vpcfg.v.GetString(loggerOutput),
 	}, nil
 }

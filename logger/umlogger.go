@@ -12,11 +12,11 @@ import (
 
 // StorageConfig contains fileds used in Connect for DSN
 type LogConfig struct {
-	Host        string
-	Port        string
-	Pass_Secret string
-	Pass_SHA2   string
-	Output      string
+	Host       string
+	Port       string
+	PassSecret string
+	PassSHA2   string
+	Output     string
 }
 
 // NullFormatter structure for creating null formatter for logger
@@ -30,43 +30,44 @@ func (NullFormatter) Format(e *log.Entry) ([]byte, error) {
 
 // NewLogger initialized logger according to configuration
 func NewLogger(lc *LogConfig) error {
+	var err error
 	switch lc.Output {
 	case "Stdout":
-		log.SetFormatter(&log.TextFormatter{})
-		log.SetOutput(os.Stdout)
+		lc.setLoggerToStdout()
 	case "File":
-		f, err := os.OpenFile("user_manager_api.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+		err = lc.setLoggerToFile()
 		if err != nil {
 			fmt.Printf("error opening file: %v", err)
 		}
-		log.SetFormatter(&log.JSONFormatter{})
-		log.SetOutput(f)
 	case "Graylog":
-		graylog_adr := fmt.Sprintf("%v:%v", lc.Host, lc.Port)
-		hook := graylog.NewGraylogHook(graylog_adr, map[string]interface{}{"API": "User management service"})
-		log.AddHook(hook)
-		log.SetFormatter(new(NullFormatter))
+		err = lc.setLoggerToGraylog()
+		if err != nil {
+			fmt.Printf("error assigning logger to Graylog: %v", err)
+		}
 	default:
-		return fmt.Errorf("Error logger configure output destination <%v> < should be Graylog, Stdout or File", lc.Output)
+		err = fmt.Errorf("Error logger configure output destination <%v> < should be Graylog, Stdout or File", lc.Output)
 	}
 	log.SetLevel(log.PanicLevel)
+	return err
+}
+
+func (lc *LogConfig) setLoggerToFile() error {
+	f, err := os.OpenFile("user_manager_api.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetOutput(f)
+	return err
+}
+
+func (lc *LogConfig) setLoggerToStdout() error {
+	log.SetFormatter(&log.TextFormatter{})
+	log.SetOutput(os.Stdout)
 	return nil
 }
 
-// Message log message depending to log level
-func Message(level log.Level, m string) {
-	switch level {
-	case log.DebugLevel:
-		log.Debug(m)
-	case log.InfoLevel:
-		log.Info(m)
-	case log.WarnLevel:
-		log.Warn(m)
-	case log.ErrorLevel:
-		log.Error(m)
-	case log.FatalLevel:
-		log.Fatal(m)
-	case log.PanicLevel:
-		log.Panic(m)
-	}
+func (lc *LogConfig) setLoggerToGraylog() error {
+	graylogAdr := fmt.Sprintf("%v:%v", lc.Host, lc.Port)
+	hook := graylog.NewGraylogHook(graylogAdr, map[string]interface{}{"API": "User management service"})
+	log.AddHook(hook)
+	log.SetFormatter(new(NullFormatter))
+	return nil
 }
