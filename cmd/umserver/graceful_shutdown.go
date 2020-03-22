@@ -10,12 +10,7 @@ import (
 	"time"
 )
 
-// closingStructure includes all components, which are connected with our application
-type closingStructure struct {
-	components []io.Closer
-}
-
-func gracefulShutdown(timeout time.Duration, wg *sync.WaitGroup, srv *http.Server, closers *closingStructure) error {
+func gracefulShutdown(timeout time.Duration, wg *sync.WaitGroup, srv *http.Server, closers ...io.Closer) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 
 	// Shutdown HTTP server
@@ -25,7 +20,7 @@ func gracefulShutdown(timeout time.Duration, wg *sync.WaitGroup, srv *http.Serve
 			log.Println("shutdown error: %w", err)
 		}
 
-		for _, component := range closers.components {
+		for _, component := range closers {
 			err := component.Close()
 			if err != nil {
 				log.Println("component error: %w", err)
