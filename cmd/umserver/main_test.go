@@ -15,39 +15,11 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-func TestGracefulShutdown_Success(t *testing.T) {
-	relatedComponents := setComponents()
-
-	err := gracefulShutdown(3*time.Second, new(sync.WaitGroup), new(http.Server), relatedComponents)
-	if err != nil {
-		t.Error(err)
-	}
+type MockSetupComponents struct {
+	closers []io.Closer
 }
 
-func TestGracefulShutdown_Fail(t *testing.T) {
-	relatedComponents := setComponents()
-
-	wg := new(sync.WaitGroup)
-	wg.Add(1)
-	err := gracefulShutdown(1*time.Nanosecond, wg, new(http.Server), relatedComponents)
-	if err == nil {
-		t.Error("want error got nil")
-	}
-}
-
-func Test_GracefulShutdown_Timeout(t *testing.T) {
-	relatedComponents := setComponents()
-
-	t.Run("with timeout", func(t *testing.T) {
-		err := gracefulShutdown(0*time.Second, new(sync.WaitGroup), new(http.Server), relatedComponents)
-		if err.Error() != "timeout" {
-			t.Fatal("want timeout got nil")
-		}
-	})
-}
-
-// setComponents is using for setting database, consul and kafka as related component
-func setComponents() *closingStructure {
+func (m *MockSetupComponents) SetAllComponents() []io.Closer {
 	// There will be actual information about PostgreSQL connection in future
 	connStr := "user=postgres password=postgres dbname=postgres sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
@@ -81,12 +53,41 @@ func setComponents() *closingStructure {
 
 	// relatedComponents structure includes all components, which are connected with our application
 	// The following components: db connection, kafkaConnection and consulService
-	relatedComponents := closingStructure{
-		components: []io.Closer{
-			db,
-			kafkaConnection,
-			consulService,
-		},
+	m.closers = append(m.closers, db, kafkaConnection, consulService)
+
+	return m.closers
+}
+
+func TestGracefulShutdown_Success(t *testing.T) {
+	mock := MockSetupComponents{}
+	closers := mock.SetAllComponents()
+
+	err := gracefulShutdown(3*time.Second, new(sync.WaitGroup), new(http.Server), closers...)
+	if err != nil {
+		t.Error(err)
 	}
-	return &relatedComponents
+}
+
+func TestGracefulShutdown_Fail(t *testing.T) {
+	mock := MockSetupComponents{}
+	closers := mock.SetAllComponents()
+
+	wg := new(sync.WaitGroup)
+	wg.Add(1)
+	err := gracefulShutdown(1*time.Nanosecond, wg, new(http.Server), closers...)
+	if err == nil {
+		t.Error("want error got nil")
+	}
+}
+
+func Test_GracefulShutdown_Timeout(t *testing.T) {
+	mock := MockSetupComponents{}
+	closers := mock.SetAllComponents()
+
+	t.Run("with timeout", func(t *testing.T) {
+		err := gracefulShutdown(0*time.Second, new(sync.WaitGroup), new(http.Server), closers...)
+		if err.Error() != "timeout" {
+			t.Fatal("want timeout got nil")
+		}
+	})
 }
