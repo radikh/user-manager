@@ -6,6 +6,7 @@ package main
 
 import (
 	"context"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -23,6 +24,7 @@ func main() {
 	var (
 		ctx, cancel = context.WithCancel(context.Background())
 		wg          = new(sync.WaitGroup)
+		closers     []io.Closer
 	)
 
 	// TODO: Replace with HTTP server implemented in server package
@@ -47,11 +49,6 @@ func main() {
 	// ...
 	// TODO: There will be actual information about kafka in future
 
-	relatedComponents := closingStructure{
-		// There will be all necessary related components,
-		// which  must be closed before main service shutdown
-	}
-
 	// Watch errors and os signals
 	interrupt, code := make(chan os.Signal, 1), 0
 	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
@@ -67,7 +64,7 @@ func main() {
 	log.Print("Server is Stopping...")
 
 	// Stop application
-	err := gracefulShutdown(gracefulShutdownTimeOut, wg, srv, &relatedComponents)
+	err := gracefulShutdown(gracefulShutdownTimeOut, wg, srv, closers...)
 	if err != nil {
 		log.Fatalf("Server graceful shutdown failed: %v", err)
 	}
