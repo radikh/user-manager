@@ -1,66 +1,42 @@
 package main
 
 import (
-	"database/sql"
+	"errors"
 	"io"
-	"log"
-	"net"
 	"net/http"
 	"sync"
 	"testing"
 	"time"
-
-	"github.com/hashicorp/consul/api"
-	"github.com/hashicorp/consul/connect"
-	"github.com/segmentio/kafka-go"
 )
 
-type MockSetupComponents struct {
-	closers []io.Closer
+type CloserMock struct {
+	name     string
+	expected func() error
 }
 
-func (m *MockSetupComponents) SetAllComponents() []io.Closer {
-	// There will be actual information about PostgreSQL connection in future
-	connStr := "user=postgres password=postgres dbname=postgres sslmode=disable"
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		panic(err)
+func NewCloserMock(name string, expected func() error) io.Closer {
+	return CloserMock{
+		name:     name,
+		expected: expected,
 	}
+}
 
-	if err = db.Close(); err != nil {
-		log.Fatal(err)
-	}
-
-	// There will be actual information in future
-	netConnection, err := net.Dial("tcp", "golang.org:80")
-	if err != nil {
-		log.Fatalf("net connection failed:%+v", err)
-	}
-
-	// There will be actual information about kafka in future
-	kafkaConnection := kafka.NewConn(netConnection, "topic_name", 0)
-
-	// There will be actual information about consul in future
-	consulClient, err := api.NewClient(api.DefaultConfig())
-	if err != nil {
-		log.Fatalf("consul client failed: %+v", err)
-	}
-
-	consulService, err := connect.NewService("service_name", consulClient)
-	if err != nil {
-		log.Fatalf("consul service failed:%+v", err)
-	}
-
-	// relatedComponents structure includes all components, which are connected with our application
-	// The following components: db connection, kafkaConnection and consulService
-	m.closers = append(m.closers, db, kafkaConnection, consulService)
-
-	return m.closers
+func (cm CloserMock) Close() error {
+	return cm.expected()
 }
 
 func TestGracefulShutdown_Success(t *testing.T) {
-	mock := MockSetupComponents{}
-	closers := mock.SetAllComponents()
+	closers := []io.Closer{
+		NewCloserMock("consul", func() error {
+			return nil
+		}),
+		NewCloserMock("postgres", func() error {
+			return errors.New("can't close connection")
+		}),
+		NewCloserMock("kafka", func() error {
+			return nil
+		}),
+	}
 
 	err := gracefulShutdown(3*time.Second, new(sync.WaitGroup), new(http.Server), closers...)
 	if err != nil {
@@ -69,8 +45,17 @@ func TestGracefulShutdown_Success(t *testing.T) {
 }
 
 func TestGracefulShutdown_Fail(t *testing.T) {
-	mock := MockSetupComponents{}
-	closers := mock.SetAllComponents()
+	closers := []io.Closer{
+		NewCloserMock("consul", func() error {
+			return nil
+		}),
+		NewCloserMock("postgres", func() error {
+			return errors.New("can't close connection")
+		}),
+		NewCloserMock("kafka", func() error {
+			return nil
+		}),
+	}
 
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
@@ -81,8 +66,17 @@ func TestGracefulShutdown_Fail(t *testing.T) {
 }
 
 func Test_GracefulShutdown_Timeout(t *testing.T) {
-	mock := MockSetupComponents{}
-	closers := mock.SetAllComponents()
+	closers := []io.Closer{
+		NewCloserMock("consul", func() error {
+			return nil
+		}),
+		NewCloserMock("postgres", func() error {
+			return errors.New("can't close connection")
+		}),
+		NewCloserMock("kafka", func() error {
+			return nil
+		}),
+	}
 
 	t.Run("with timeout", func(t *testing.T) {
 		err := gracefulShutdown(0*time.Second, new(sync.WaitGroup), new(http.Server), closers...)
