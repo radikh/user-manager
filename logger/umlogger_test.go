@@ -4,8 +4,11 @@ package logger
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"reflect"
 	"strings"
@@ -13,6 +16,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -161,31 +166,11 @@ func TestLogConfig_setLoggerToStdout(t *testing.T) {
 		Output: "Stdout",
 	}
 
-	tests := []struct {
-		name    string
-		lc      *LogConfig
-		wantErr bool
-	}{
-		{
-			name:    "Incorect",
-			lc:      conf_file,
-			wantErr: true,
-		}, {
-			name:    "Correct",
-			lc:      conf_stdout,
-			wantErr: false,
-		},
-	}
+	conf_stdout.setLoggerToStdout()
+	assert.Equal(t, os.Stdout, log.StandardLogger().Out)
+	conf_file.setLoggerToStdout()
+	assert.NotEqual(t, os.Stdout, log.StandardLogger().Out)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := NewLogger(tt.lc)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("NewLogger() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-		})
-	}
 }
 
 func TestLogConfig_setLoggerToGraylog(t *testing.T) {
@@ -238,4 +223,56 @@ func TestLogConfig_setLoggerToGraylog(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestLoggerHandler(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		function func(*testing.T, *http.Request, *httptest.ResponseRecorder)
+	}{
+		{
+			name:     "when a request is successful",
+			function: testRecorded,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			r := httptest.NewRequest(http.MethodGet, "/", nil)
+			w := httptest.NewRecorder()
+			test.function(t, r, w)
+		})
+	}
+}
+
+func testRecorded(t *testing.T, r *http.Request, w *httptest.ResponseRecorder) {
+	mw := LoggerHandler()
+	mw(http.HandlerFunc(ping)).ServeHTTP(w, r)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func ping(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "application/json")
+	w.Write([]byte("OK\n"))
+}
+
+func TestNew(t *testing.T) {
+
+	ctx := context.Background()
+	ctx = New(ctx)
+
+	logg := WithContext(ctx)
+	require.NotNil(t, logg)
+
+}
+
+func TestWithContext(t *testing.T) {
+
+	client := WithContext(nil)
+	require.NotNil(t, client)
+
+	client = WithContext(context.Background())
+	require.NotNil(t, client)
 }

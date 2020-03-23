@@ -4,6 +4,8 @@
         "Port": 77777,
         "PassSecret": "secretpassword",
         "PassSHA2": "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
-        "Output": "Graylog"
+        "Output": "Graylog",
+        "Level": "info",
+        "Type": "async"
     }
 }

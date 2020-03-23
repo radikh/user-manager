@@ -64,8 +64,23 @@ func TestViperCfg_NewLoggerConfig(t *testing.T) {
 				PassSecret: "secretpassword",
 				PassSHA2:   "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
 				Output:     "Graylog",
+				Level:      "info",
+				Type:       "async",
 			},
 			wantErr: false,
+		}, {
+			name:   "testFail",
+			fields: fields{v: v.v},
+			want: &logger.LogConfig{
+				Host:       "GREYLOGHOST",
+				Port:       "77777",
+				PassSecret: "wrongpassword",
+				PassSHA2:   "anotherwrongpassword",
+				Output:     "Graylog",
+				Level:      "info",
+				Type:       "async",
+			},
+			wantErr: true,
 		},
 	}
 

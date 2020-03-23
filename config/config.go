@@ -17,6 +17,8 @@ const (
 	loggerPassSecret = "loggerUM.PassSecret"
 	loggerPassSHA2   = "loggerUM.PassSHA2"
 	loggerOutput     = "loggerUM.Output"
+	LoggerLevel      = "loggerUM.Level"
+	LoggerType       = "loggerUM.Type"
 )
 
 type ViperCfg struct {
@@ -44,5 +46,7 @@ func (vpcfg *ViperCfg) NewLoggerConfig() (*logger.LogConfig, error) {
 		PassSecret: vpcfg.v.GetString(loggerPassSecret),
 		PassSHA2:   vpcfg.v.GetString(loggerPassSHA2),
 		Output:     vpcfg.v.GetString(loggerOutput),
+		Level:      vpcfg.v.GetString(LoggerLevel),
+		Type:       vpcfg.v.GetString(LoggerType),
 	}, nil
 }
