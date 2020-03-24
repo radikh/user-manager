@@ -1,6 +1,5 @@
 // Package config is responsible for loading user-manager application config.
-// Basic configuration like consul credentials and address, http port to listen for requests,
-// postgres schema name, credentials, and client timeout are read from environment variables.
+
 package config
 
 import (
@@ -21,11 +20,11 @@ const (
 	LoggerType       = "loggerUM.Type"
 )
 
-type ViperCfg struct {
+type Config struct {
 	v *viper.Viper
 }
 
-func NewViperCfg(configName, configPath string) (*ViperCfg, error) {
+func NewConfig(configName, configPath string) (*Config, error) {
 	v := viper.New()
 	v.AddConfigPath(configPath)
 	v.SetConfigName(configName)
@@ -35,18 +34,18 @@ func NewViperCfg(configName, configPath string) (*ViperCfg, error) {
 		return nil, err
 	}
 
-	return &ViperCfg{v: v}, nil
+	return &Config{v: v}, nil
 }
 
 // NewPostgresConfig returns pointer to PointerConfig with data read from viper.config.json
-func (vpcfg *ViperCfg) NewLoggerConfig() (*logger.LogConfig, error) {
+func (conf *Config) NewLoggerConfig() *logger.LogConfig {
 	return &logger.LogConfig{
-		Host:       vpcfg.v.GetString(loggerHost),
-		Port:       vpcfg.v.GetString(loggerPort),
-		PassSecret: vpcfg.v.GetString(loggerPassSecret),
-		PassSHA2:   vpcfg.v.GetString(loggerPassSHA2),
-		Output:     vpcfg.v.GetString(loggerOutput),
-		Level:      vpcfg.v.GetString(LoggerLevel),
-		Type:       vpcfg.v.GetString(LoggerType),
-	}, nil
+		Host:       conf.v.GetString(loggerHost),
+		Port:       conf.v.GetString(loggerPort),
+		PassSecret: conf.v.GetString(loggerPassSecret),
+		PassSHA2:   conf.v.GetString(loggerPassSHA2),
+		Output:     conf.v.GetString(loggerOutput),
+		Level:      conf.v.GetString(LoggerLevel),
+		Type:       conf.v.GetString(LoggerType),
+	}
 }

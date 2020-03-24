@@ -1,18 +1,17 @@
 // Package config is responsible for loading user-manager application config.
-// Basic configuration like consul credentials and address, http port to listen for requests,
-// postgres schema name, credentials, and client timeout are read from environment variables.
+
 package config
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/lvl484/user-manager/logger"
 
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestNewViperCfg(t *testing.T) {
+func TestNewConfig(t *testing.T) {
 	type args struct {
 		configName string
 		configPath string
@@ -30,7 +29,7 @@ func TestNewViperCfg(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := NewViperCfg(tt.args.configName, tt.args.configPath)
+			_, err := NewConfig(tt.args.configName, tt.args.configPath)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewViperCfg() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -39,8 +38,8 @@ func TestNewViperCfg(t *testing.T) {
 	}
 }
 
-func TestViperCfg_NewLoggerConfig(t *testing.T) {
-	v, err := NewViperCfg("testvipercfg", "./testdata/")
+func TestNewLoggerConfig(t *testing.T) {
+	v, err := NewConfig("testvipercfg", "./testdata/")
 	if err != nil {
 		t.Errorf("Cant start test, err: %v", err)
 	}
@@ -50,10 +49,9 @@ func TestViperCfg_NewLoggerConfig(t *testing.T) {
 	}
 
 	tests := []struct {
-		name    string
-		fields  fields
-		want    *logger.LogConfig
-		wantErr bool
+		name   string
+		fields fields
+		want   *logger.LogConfig
 	}{
 		{
 			name:   "test",
@@ -67,7 +65,6 @@ func TestViperCfg_NewLoggerConfig(t *testing.T) {
 				Level:      "info",
 				Type:       "async",
 			},
-			wantErr: false,
 		}, {
 			name:   "testFail",
 			fields: fields{v: v.v},
@@ -80,23 +77,15 @@ func TestViperCfg_NewLoggerConfig(t *testing.T) {
 				Level:      "info",
 				Type:       "async",
 			},
-			wantErr: true,
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			vpcfg := &ViperCfg{
+			conf := &Config{
 				v: tt.fields.v,
 			}
-			got, err := vpcfg.NewLoggerConfig()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ViperCfg.NewLoggerConfig() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ViperCfg.NewLoggerConfig() = %v, want %v", got, tt.want)
-			}
+			got := conf.NewLoggerConfig()
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }

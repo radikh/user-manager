@@ -29,7 +29,7 @@ type LogConfig struct {
 }
 type loggerKeyType int
 
-const loggerKey loggerKeyType = iota
+const loggerKey loggerKeyType = 0
 
 // NullFormatter structure for creating null formatter for logger
 type NullFormatter struct {
@@ -72,8 +72,7 @@ func NewLogger(lc *LogConfig) error {
 	case "Graylog":
 		lc.setLoggerToGraylog()
 	default:
-		err = ErrFailedToConfigureLog
-		return err
+		return ErrFailedToConfigureLog
 	}
 	lev, err := log.ParseLevel(lc.Level)
 	if err != nil {
@@ -85,7 +84,7 @@ func NewLogger(lc *LogConfig) error {
 
 // setLoggerToFile initialize logger for writing to file
 func (lc *LogConfig) setLoggerToFile() error {
-	f, err := os.OpenFile("user_manager_api.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+	f, err := os.OpenFile("../user_manager_api.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetOutput(f)
 	return err
@@ -93,7 +92,8 @@ func (lc *LogConfig) setLoggerToFile() error {
 
 // setLoggerToStdout initialize logger for writing to stdout
 func (lc *LogConfig) setLoggerToStdout() {
-	log.SetFormatter(&log.TextFormatter{})
+	log.SetFormatter(&log.JSONFormatter{})
+	//	log.SetFormatter(&log.TextFormatter{})
 	log.SetOutput(os.Stdout)
 }
 

@@ -29,6 +29,10 @@ services:
     image: graylog/graylog:3.2
     networks:
       - gpsnet
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://localhost:12201"
     env_file:
       - .env
     links:
@@ -41,9 +45,9 @@ services:
       # Graylog web interface and REST API
       - 9000:9000
       # Syslog TCP
-      - 1514:1514
+      - 514:514
       # Syslog UDP
-      - 1514:1514/udp
+      - 514:514/udp
       # GELF TCP
       - 12201:12201
       # GELF UDP

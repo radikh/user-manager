@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -28,7 +27,7 @@ const (
 	loggerOutput     = "loggerUM.Output"
 )
 
-func TestNullFormatter_Format(t *testing.T) {
+func TestNullFormatterFormat(t *testing.T) {
 	type args struct {
 		e *log.Entry
 	}
@@ -75,9 +74,7 @@ func TestNullFormatter_Format(t *testing.T) {
 				t.Errorf("NullFormatter.Format() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NullFormatter.Format() = %v, want %v", got, tt.want)
-			}
+			assert.Equal(t, tt.want, got)
 		})
 	}
 }
@@ -148,7 +145,7 @@ func TestNewLogger(t *testing.T) {
 	}
 }
 
-func TestLogConfig_setLoggerToFile(t *testing.T) {
+func TestLogConfigSetLoggerToFile(t *testing.T) {
 
 	_, err := os.OpenFile("user_manager_api.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
 
@@ -157,7 +154,7 @@ func TestLogConfig_setLoggerToFile(t *testing.T) {
 	}
 }
 
-func TestLogConfig_setLoggerToStdout(t *testing.T) {
+func TestLogConfigSetLoggerToStdout(t *testing.T) {
 
 	conf_file := &LogConfig{
 		Output: "Filename",
@@ -173,7 +170,7 @@ func TestLogConfig_setLoggerToStdout(t *testing.T) {
 
 }
 
-func TestLogConfig_setLoggerToGraylog(t *testing.T) {
+func TestLogConfigSetLoggerToGraylog(t *testing.T) {
 	v := viper.New()
 	v.AddConfigPath("../config/testdata/")
 	v.SetConfigName("testvipercfg")
