@@ -10,6 +10,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// Config of Postgres DB
 type PgClient struct {
 	Host     string
 	Port     string
@@ -21,6 +22,7 @@ type PgClient struct {
 
 const pgStr = "host=%v port=%v user=%v password=%v dbname=%v sslmode=disable"
 
+//DB connector
 func ConnectToDb(pg *PgClient) *sql.DB {
 
 	pgConfig := fmt.Sprintf(pgStr, pg.Host, pg.Port, pg.User, pg.Password, pg.DbName)
@@ -30,7 +32,7 @@ func ConnectToDb(pg *PgClient) *sql.DB {
 		log.Print(err)
 		log.Print("Could not connect to ", pg.DbName)
 	}
-	if pg.IsAlive() != nil {
+	if pg.isAlive() != nil {
 		log.Print(err)
 		log.Print("Could not connect to ", pg.DbName)
 	}
@@ -39,7 +41,9 @@ func ConnectToDb(pg *PgClient) *sql.DB {
 
 	return pg.Db
 }
-func (pg *PgClient) IsAlive() error {
+
+//Check connect to DB return err if no connection
+func (pg *PgClient) isAlive() error {
 	err := pg.Db.Ping()
 	return err
 }
