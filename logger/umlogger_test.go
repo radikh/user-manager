@@ -4,11 +4,8 @@ package logger
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
@@ -16,7 +13,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -79,7 +75,7 @@ func TestNullFormatterFormat(t *testing.T) {
 	}
 }
 
-func TestNewLogger(t *testing.T) {
+func TestConfigLogger(t *testing.T) {
 	v := viper.New()
 	v.AddConfigPath("../config/testdata/")
 	v.SetConfigName("testvipercfg")
@@ -88,7 +84,7 @@ func TestNewLogger(t *testing.T) {
 	if err := v.ReadInConfig(); err != nil {
 		t.Error(err)
 	}
-
+	logger := log.New()
 	conf := &LogConfig{
 		Host:       v.GetString(loggerHost),
 		Port:       v.GetString(loggerPort),
@@ -136,7 +132,7 @@ func TestNewLogger(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := NewLogger(tt.lc)
+			err := ConfigLogger(logger, tt.lc)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewLogger() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -155,7 +151,7 @@ func TestLogConfigSetLoggerToFile(t *testing.T) {
 }
 
 func TestLogConfigSetLoggerToStdout(t *testing.T) {
-
+	logger := log.New()
 	conf_file := &LogConfig{
 		Output: "Filename",
 	}
@@ -163,9 +159,9 @@ func TestLogConfigSetLoggerToStdout(t *testing.T) {
 		Output: "Stdout",
 	}
 
-	conf_stdout.setLoggerToStdout()
+	conf_stdout.setLoggerToStdout(logger)
 	assert.Equal(t, os.Stdout, log.StandardLogger().Out)
-	conf_file.setLoggerToStdout()
+	conf_file.setLoggerToStdout(logger)
 	assert.NotEqual(t, os.Stdout, log.StandardLogger().Out)
 
 }
@@ -179,7 +175,7 @@ func TestLogConfigSetLoggerToGraylog(t *testing.T) {
 	if err := v.ReadInConfig(); err != nil {
 		t.Error(err)
 	}
-
+	logger := log.New()
 	conf := &LogConfig{
 		Host:       v.GetString(loggerHost),
 		Port:       v.GetString(loggerPort),
@@ -213,63 +209,11 @@ func TestLogConfigSetLoggerToGraylog(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := NewLogger(tt.lc)
+			err := ConfigLogger(logger, tt.lc)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewLogger() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 		})
 	}
-}
-
-func TestLoggerHandler(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name     string
-		function func(*testing.T, *http.Request, *httptest.ResponseRecorder)
-	}{
-		{
-			name:     "when a request is successful",
-			function: testRecorded,
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			r := httptest.NewRequest(http.MethodGet, "/", nil)
-			w := httptest.NewRecorder()
-			test.function(t, r, w)
-		})
-	}
-}
-
-func testRecorded(t *testing.T, r *http.Request, w *httptest.ResponseRecorder) {
-	mw := LoggerHandler()
-	mw(http.HandlerFunc(ping)).ServeHTTP(w, r)
-	assert.Equal(t, http.StatusOK, w.Code)
-}
-
-func ping(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
-	w.Write([]byte("OK\n"))
-}
-
-func TestNew(t *testing.T) {
-
-	ctx := context.Background()
-	ctx = New(ctx)
-
-	logg := WithContext(ctx)
-	require.NotNil(t, logg)
-
-}
-
-func TestWithContext(t *testing.T) {
-
-	client := WithContext(nil)
-	require.NotNil(t, client)
-
-	client = WithContext(context.Background())
-	require.NotNil(t, client)
 }
