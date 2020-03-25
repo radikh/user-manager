@@ -29,7 +29,7 @@ var Log logger.Logger
 
 func init() {
 	var err error
-	configuration, err = config.NewConfig("viper.config", "../config")
+	configuration, err = config.NewConfig("viper.config", "../../config")
 	if err != nil {
 		fmt.Println(err)
 	}
