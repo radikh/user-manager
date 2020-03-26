@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 
+	// _ mean that we can use all function from this package
 	_ "github.com/lib/pq"
 )
 
@@ -16,34 +17,29 @@ type PgClient struct {
 	Port     string
 	User     string
 	Password string
-	DbName   string
-	Db       *sql.DB
+	DBName   string
 }
 
 const pgStr = "host=%v port=%v user=%v password=%v dbname=%v sslmode=disable"
 
 //DB connector
-func ConnectToDb(pg *PgClient) *sql.DB {
-
-	pgConfig := fmt.Sprintf(pgStr, pg.Host, pg.Port, pg.User, pg.Password, pg.DbName)
+func ConnectToDB(pg *PgClient) (*sql.DB, error) {
+	pgConfig := fmt.Sprintf(pgStr, pg.Host, pg.Port, pg.User, pg.Password, pg.DBName)
 
 	database, err := sql.Open("postgres", pgConfig)
 	if err != nil {
-		log.Print(err)
-		log.Print("Could not connect to ", pg.DbName)
+		log.Print("Could not connect to ", pg.DBName)
+		return nil, err
 	}
-	if pg.isAlive() != nil {
-		log.Print(err)
-		log.Print("Could not connect to ", pg.DbName)
+
+	err = database.Ping()
+
+	if err != nil {
+		log.Print("Could not connect to ", pg.DBName)
+		return nil, err
 	}
-	log.Print("Successfully connected to ", pg.DbName)
-	pg.Db = database
 
-	return pg.Db
-}
+	log.Print("Successfully connected to ", pg.DBName)
 
-//Check connect to DB return err if no connection
-func (pg *PgClient) isAlive() error {
-	err := pg.Db.Ping()
-	return err
+	return database, nil
 }

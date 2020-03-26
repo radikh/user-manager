@@ -16,6 +16,7 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/lvl484/user-manager/storage"
 )
 
 const gracefulShutdownTimeOut = 10 * time.Second
@@ -32,6 +33,7 @@ func main() {
 
 	// Go routine with run HTTP server
 	wg.Add(1)
+
 	go func() {
 		defer wg.Done()
 		defer cancel()
@@ -43,9 +45,20 @@ func main() {
 	}()
 	log.Printf("Server Listening at %s...", srv.Addr)
 
-	// TODO: There will be actual information about PostgreSQL connection in future
+	// pgConfig will be taken from package config, but it hasn't ready yet
+	pgConfig := storage.PgClient{
+		Host:     "127.0.0.1",
+		Port:     "5432",
+		User:     "postgres",
+		Password: "postgres",
+		DBName:   "um_db",
+	}
 
-	db := ConnectToDb(pgConfig)
+	db, err := storage.ConnectToDB(&pgConfig)
+	if err != nil {
+		log.Print(err)
+	}
+	defer db.Close()
 
 	// TODO: There will be actual information about consul in future
 	// ...
@@ -66,7 +79,7 @@ func main() {
 	log.Print("Server is Stopping...")
 
 	// Stop application
-	err := gracefulShutdown(gracefulShutdownTimeOut, wg, srv, closers...)
+	err = gracefulShutdown(gracefulShutdownTimeOut, wg, srv, closers...)
 	if err != nil {
 		log.Fatalf("Server graceful shutdown failed: %v", err)
 	}
