@@ -54,8 +54,8 @@ func NewConfig() (*Config, error) {
 	return &config, nil
 }
 
-// Get configurations for glaylog
-func (c *Config) GraylogConfig(ctx context.Context) (string, error) {
+// LoggerConfig get configurations for glaylog
+func (c *Config) LoggerConfig(ctx context.Context) (string, error) {
 	const serviceName = "graylog"
 
 	opts := new(consul.QueryOptions).WithContext(ctx)
@@ -75,8 +75,8 @@ func (c *Config) GraylogConfig(ctx context.Context) (string, error) {
 	return fmt.Sprintf("%s:%d", host, port), nil
 }
 
-// Get configuration for Postgres Database
-func (c *Config) PostgresConfig(ctx context.Context) (string, error) {
+// DBConfig get configuration for Postgres Database
+func (c *Config) DBConfig(ctx context.Context) (string, error) {
 	const serviceName = "db"
 
 	opts := new(consul.QueryOptions).WithContext(ctx)

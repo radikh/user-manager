@@ -37,8 +37,8 @@ func main() {
 
 	// Example
 	fmt.Println(cfg)
-	fmt.Println(cfg.GraylogConfig(ctx))
-	fmt.Println(cfg.PostgresConfig(ctx))
+	fmt.Println(cfg.LoggerConfig(ctx))
+	fmt.Println(cfg.DBConfig(ctx))
 
 	// TODO: Replace with HTTP server implemented in server package
 	srv := &http.Server{
