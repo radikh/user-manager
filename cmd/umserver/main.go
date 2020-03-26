@@ -46,7 +46,7 @@ func main() {
 	log.Printf("Server Listening at %s...", srv.Addr)
 
 	// pgConfig will be taken from package config, but it hasn't ready yet
-	pgConfig := storage.PgClient{
+	pgConfig := storage.DBConfig{
 		Host:     "127.0.0.1",
 		Port:     "5432",
 		User:     "postgres",

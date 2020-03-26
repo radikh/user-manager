@@ -7,7 +7,7 @@ import (
 )
 
 func TestConnectToDB(t *testing.T) {
-	conf := &PgClient{
+	conf := &DBConfig{
 		Host:     "127.0.0.1",
 		Port:     "5432",
 		User:     "postgres",
@@ -15,7 +15,7 @@ func TestConnectToDB(t *testing.T) {
 		DBName:   "um_db",
 	}
 
-	incorrectConf := &PgClient{
+	incorrectConf := &DBConfig{
 		Host:     "host",
 		Port:     "port",
 		User:     "user",
@@ -23,11 +23,11 @@ func TestConnectToDB(t *testing.T) {
 		DBName:   "DBName",
 	}
 
-	zeroConf := &PgClient{}
+	zeroConf := &DBConfig{}
 
 	tests := []struct {
 		name   string
-		config *PgClient
+		config *DBConfig
 		expect bool
 	}{
 		{

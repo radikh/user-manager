@@ -12,7 +12,7 @@ import (
 )
 
 // Config of Postgres DB
-type PgClient struct {
+type DBConfig struct {
 	Host     string
 	Port     string
 	User     string
@@ -23,7 +23,7 @@ type PgClient struct {
 const pgStr = "host=%v port=%v user=%v password=%v dbname=%v sslmode=disable"
 
 //DB connector
-func ConnectToDB(pg *PgClient) (*sql.DB, error) {
+func ConnectToDB(pg *DBConfig) (*sql.DB, error) {
 	pgConfig := fmt.Sprintf(pgStr, pg.Host, pg.Port, pg.User, pg.Password, pg.DBName)
 
 	database, err := sql.Open("postgres", pgConfig)
