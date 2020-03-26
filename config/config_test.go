@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/lvl484/user-manager/config"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewConfig_Success(t *testing.T) {
@@ -20,20 +22,36 @@ func TestNewConfig_Success(t *testing.T) {
 		t.Fatal("want nil got error", err)
 	}
 
-	if cfg.PostgresUser != "postgres" {
-		t.Errorf("want postgres got %s", cfg.PostgresUser)
+	testCases := []struct {
+		name     string
+		got      string
+		expected string
+	}{
+		{
+			name:     "POSTGRES_USER",
+			got:      cfg.PostgresUser,
+			expected: "postgres",
+		}, {
+			name:     "POSTGRES_PASSWORD",
+			got:      cfg.PostgresPass,
+			expected: "1q2w3e4r",
+		}, {
+			name:     "POSTGRES_DB",
+			got:      cfg.PostgresDB,
+			expected: "um_db",
+		}, {
+			name:     "CONSUL_ADDRESS",
+			got:      cfg.ConsulAddress,
+			expected: "consul:8500",
+		}, {
+			name:     "CONSUL_TOKEN",
+			got:      cfg.ConsulToken,
+			expected: "token",
+		},
 	}
-	if cfg.PostgresPass != "1q2w3e4r" {
-		t.Errorf("want 1q2w3e4r got %s", cfg.PostgresPass)
-	}
-	if cfg.PostgresDB != "um_db" {
-		t.Errorf("want um_db got %s", cfg.PostgresDB)
-	}
-	if cfg.ConsulAddress != "consul:8500" {
-		t.Errorf("want consul:8500 got %s", cfg.ConsulAddress)
-	}
-	if cfg.ConsulToken != "token" {
-		t.Errorf("want token got %s", cfg.ConsulToken)
+
+	for _, tt := range testCases {
+		assert.Equal(t, tt.got, tt.expected, "The two values should be equal.")
 	}
 }
 
