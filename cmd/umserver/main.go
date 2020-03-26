@@ -6,6 +6,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -14,6 +15,8 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/lvl484/user-manager/config"
 
 	_ "github.com/lib/pq"
 )
@@ -27,8 +30,22 @@ func main() {
 		closers     []io.Closer
 	)
 
+	cfg, err := config.NewConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Example
+	fmt.Println(cfg)
+	fmt.Println(cfg.GraylogConfig(ctx))
+	fmt.Println(cfg.PostgresConfig(ctx))
+
 	// TODO: Replace with HTTP server implemented in server package
-	srv := &http.Server{Addr: ":8099"}
+	srv := &http.Server{
+		Addr:         cfg.ServerAddress(),
+		ReadTimeout:  cfg.Timeout,
+		WriteTimeout: cfg.Timeout,
+	}
 
 	// Go routine with run HTTP server
 	wg.Add(1)
@@ -64,7 +81,7 @@ func main() {
 	log.Print("Server is Stopping...")
 
 	// Stop application
-	err := gracefulShutdown(gracefulShutdownTimeOut, wg, srv, closers...)
+	err = gracefulShutdown(gracefulShutdownTimeOut, wg, srv, closers...)
 	if err != nil {
 		log.Fatalf("Server graceful shutdown failed: %v", err)
 	}
