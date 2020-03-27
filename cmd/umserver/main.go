@@ -20,6 +20,7 @@ import (
 
 	"github.com/lvl484/user-manager/config"
 	"github.com/lvl484/user-manager/logger"
+	"github.com/lvl484/user-manager/storage"
 )
 
 const gracefulShutdownTimeOut = 10 * time.Second
@@ -57,6 +58,7 @@ func main() {
 	fmt.Println("A am started")
 	// Go routine with run HTTP server
 	wg.Add(1)
+
 	go func() {
 		defer wg.Done()
 		defer cancel()
@@ -68,8 +70,21 @@ func main() {
 	}()
 	Log.Info("Server Listening at %s...", srv.Addr)
 
-	// TODO: There will be actual information about PostgreSQL connection in future
-	// ...
+	// pgConfig will be taken from package config, but it hasn't ready yet
+	pgConfig := storage.DBConfig{
+		Host:     "127.0.0.1",
+		Port:     "5432",
+		User:     "postgres",
+		Password: "postgres",
+		DBName:   "um_db",
+	}
+
+	db, err := storage.ConnectToDB(&pgConfig)
+	if err != nil {
+		Log.Error(err)
+	}
+	defer db.Close()
+
 	// TODO: There will be actual information about consul in future
 	// ...
 	// TODO: There will be actual information about kafka in future
