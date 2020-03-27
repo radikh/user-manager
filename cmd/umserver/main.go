@@ -8,12 +8,15 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/lvl484/user-manager/config"
 
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
@@ -52,8 +55,22 @@ func main() {
 	)
 	var err error
 
+	cfg, err := config.NewConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Example
+	log.Println(cfg)
+	log.Println(cfg.LoggerConfig(ctx))
+	log.Println(cfg.DBConfig(ctx))
+
 	// TODO: Replace with HTTP server implemented in server package
-	srv := &http.Server{Addr: ":8099"}
+	srv := &http.Server{
+		Addr:         cfg.ServerAddress(),
+		ReadTimeout:  cfg.ReadTimeout,
+		WriteTimeout: cfg.WriteTimeout,
+	}
 	Log.Info("Server start at %s...", srv.Addr)
 	fmt.Println("A am started")
 	// Go routine with run HTTP server
