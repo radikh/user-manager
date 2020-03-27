@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -17,13 +16,13 @@ func gracefulShutdown(timeout time.Duration, wg *sync.WaitGroup, srv *http.Serve
 	go func() {
 		err := srv.Shutdown(ctx)
 		if err != nil {
-			log.Println("shutdown error: %w", err)
+			Log.Errorf("shutdown error: %w", err)
 		}
 
 		for _, component := range closers {
 			err := component.Close()
 			if err != nil {
-				log.Println("component error: %w", err)
+				Log.Errorf("component error: %w", err)
 			}
 		}
 	}()
