@@ -3,12 +3,17 @@
 package config
 
 import (
-<<<<<<< HEAD
+	"context"
+	"errors"
+	"fmt"
 	"strings"
+	"time"
+
+	consul "github.com/hashicorp/consul/api"
+	"github.com/kelseyhightower/envconfig"
+	"github.com/spf13/viper"
 
 	"github.com/lvl484/user-manager/logger"
-
-	"github.com/spf13/viper"
 )
 
 const (
@@ -21,11 +26,25 @@ const (
 	LoggerType       = "loggerUM.Type"
 )
 
+// Config model includes all necessary information, which will be read from environment variables
 type Config struct {
-	v *viper.Viper
+	PostgresUser string `envconfig:"POSTGRES_USER" required:"true"`
+	PostgresPass string `envconfig:"POSTGRES_PASSWORD" required:"true"`
+	PostgresDB   string `envconfig:"POSTGRES_DB" required:"true"`
+
+	ConsulAddress string `envconfig:"CONSUL_ADDRESS" required:"true"`
+	ConsulToken   string `envconfig:"CONSUL_TOKEN" required:"true"`
+
+	BindIP       string        `envconfig:"BIND_IP" default:"0.0.0.0"`
+	BindPort     int           `envconfig:"BIND_PORT" default:"8000"`
+	ReadTimeout  time.Duration `envconfig:"READ_TIMEOUT" default:"60s"`
+	WriteTimeout time.Duration `envconfig:"WRITE_TIMEOUT" default:"60s"`
+
+	consulClient *consul.Client
+	v            *viper.Viper
 }
 
-func NewConfig(configName, configPath string) (*Config, error) {
+func NewViperConfig(configName, configPath string) (*Config, error) {
 	v := viper.New()
 	v.AddConfigPath(configPath)
 	v.SetConfigName(configName)
@@ -49,31 +68,6 @@ func (conf *Config) NewLoggerConfig() *logger.LogConfig {
 		Level:      conf.v.GetString(LoggerLevel),
 		Type:       conf.v.GetString(LoggerType),
 	}
-=======
-	"context"
-	"errors"
-	"fmt"
-	"time"
-
-	consul "github.com/hashicorp/consul/api"
-	"github.com/kelseyhightower/envconfig"
-)
-
-// Config model includes all necessary information, which will be read from environment variables
-type Config struct {
-	PostgresUser string `envconfig:"POSTGRES_USER" required:"true"`
-	PostgresPass string `envconfig:"POSTGRES_PASSWORD" required:"true"`
-	PostgresDB   string `envconfig:"POSTGRES_DB" required:"true"`
-
-	ConsulAddress string `envconfig:"CONSUL_ADDRESS" required:"true"`
-	ConsulToken   string `envconfig:"CONSUL_TOKEN" required:"true"`
-
-	BindIP       string        `envconfig:"BIND_IP" default:"0.0.0.0"`
-	BindPort     int           `envconfig:"BIND_PORT" default:"8000"`
-	ReadTimeout  time.Duration `envconfig:"READ_TIMEOUT" default:"60s"`
-	WriteTimeout time.Duration `envconfig:"WRITE_TIMEOUT" default:"60s"`
-
-	consulClient *consul.Client
 }
 
 // NewConfig() create new configuration for application
@@ -145,5 +139,4 @@ func (c *Config) DBConfig(ctx context.Context) (string, error) {
 
 func (c *Config) ServerAddress() string {
 	return fmt.Sprintf("%s:%d", c.BindIP, c.BindPort)
->>>>>>> ed37d8a12ee32089279f423ce7924a537fa4568f
 }

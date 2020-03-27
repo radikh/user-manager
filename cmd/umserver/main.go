@@ -8,15 +8,12 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
-
-	"github.com/lvl484/user-manager/config"
 
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
@@ -33,7 +30,7 @@ var Log logger.Logger
 
 func init() {
 	var err error
-	configuration, err = config.NewConfig("viper.config", "../../config")
+	configuration, err = config.NewViperConfig("viper.config", "../../config")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -57,13 +54,13 @@ func main() {
 
 	cfg, err := config.NewConfig()
 	if err != nil {
-		log.Fatal(err)
+		Log.Fatal(err)
 	}
 
 	// Example
-	log.Println(cfg)
-	log.Println(cfg.LoggerConfig(ctx))
-	log.Println(cfg.DBConfig(ctx))
+	Log.Info(cfg)
+	Log.Info(cfg.LoggerConfig(ctx))
+	Log.Info(cfg.DBConfig(ctx))
 
 	// TODO: Replace with HTTP server implemented in server package
 	srv := &http.Server{

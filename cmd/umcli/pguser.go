@@ -12,8 +12,8 @@ type Postgres struct {
 }
 
 // NewPostgres returns Postgres with db
-func NewPostgres(db *sql.DB) *Postgres {
-	return &Postgres{db: db}
+func NewPostgres(data *sql.DB) *Postgres {
+	return &Postgres{db: data}
 }
 
 const (

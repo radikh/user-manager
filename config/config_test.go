@@ -6,15 +6,14 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/lvl484/user-manager/logger"
-	"github.com/lvl484/user-manager/config"
 )
 
-func TestNewConfig(t *testing.T) {
+func TestNewViperConfig(t *testing.T) {
 	type args struct {
 		configName string
 		configPath string
@@ -32,7 +31,7 @@ func TestNewConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := NewConfig(tt.args.configName, tt.args.configPath)
+			_, err := NewViperConfig(tt.args.configName, tt.args.configPath)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewViperCfg() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -42,7 +41,7 @@ func TestNewConfig(t *testing.T) {
 }
 
 func TestNewLoggerConfig(t *testing.T) {
-	v, err := NewConfig("testvipercfg", "./testdata/")
+	v, err := NewViperConfig("testvipercfg", "./testdata/")
 	if err != nil {
 		t.Errorf("Cant start test, err: %v", err)
 	}
@@ -90,7 +89,8 @@ func TestNewLoggerConfig(t *testing.T) {
 			got := conf.NewLoggerConfig()
 			assert.Equal(t, tt.want, got)
 		})
-
+	}
+}
 func TestNewConfig_Required(t *testing.T) {
 	os.Setenv("POSTGRES_USER", "postgres")
 	os.Setenv("POSTGRES_PASSWORD", "1q2w3e4r")
@@ -98,7 +98,7 @@ func TestNewConfig_Required(t *testing.T) {
 	os.Setenv("CONSUL_ADDRESS", "consul:8500")
 	os.Setenv("CONSUL_TOKEN", "token")
 
-	cfg, err := config.NewConfig()
+	cfg, err := NewConfig()
 	require.NoError(t, err)
 
 	testCases := []struct {
@@ -135,7 +135,7 @@ func TestNewConfig_Required(t *testing.T) {
 
 	os.Unsetenv("POSTGRES_USER")
 
-	cfg, err = config.NewConfig()
+	cfg, err = NewConfig()
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "POSTGRES_USER")
 	assert.Nil(t, cfg)
@@ -148,7 +148,7 @@ func TestNewConfig_Default(t *testing.T) {
 	os.Setenv("CONSUL_ADDRESS", "unused:8500")
 	os.Setenv("CONSUL_TOKEN", "unused")
 
-	cfg, err := config.NewConfig()
+	cfg, err := NewConfig()
 	require.NoError(t, err)
 
 	testCases := []struct {
