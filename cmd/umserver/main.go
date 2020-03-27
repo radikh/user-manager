@@ -6,7 +6,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -36,15 +35,15 @@ func main() {
 	}
 
 	// Example
-	fmt.Println(cfg)
-	fmt.Println(cfg.LoggerConfig(ctx))
-	fmt.Println(cfg.DBConfig(ctx))
+	log.Println(cfg)
+	log.Println(cfg.LoggerConfig(ctx))
+	log.Println(cfg.DBConfig(ctx))
 
 	// TODO: Replace with HTTP server implemented in server package
 	srv := &http.Server{
 		Addr:         cfg.ServerAddress(),
-		ReadTimeout:  cfg.Timeout,
-		WriteTimeout: cfg.Timeout,
+		ReadTimeout:  cfg.ReadTimeout,
+		WriteTimeout: cfg.WriteTimeout,
 	}
 
 	// Go routine with run HTTP server

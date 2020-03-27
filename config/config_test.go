@@ -4,23 +4,22 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/lvl484/user-manager/config"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewConfig_Success(t *testing.T) {
+func TestNewConfig_Required(t *testing.T) {
 	os.Setenv("POSTGRES_USER", "postgres")
 	os.Setenv("POSTGRES_PASSWORD", "1q2w3e4r")
 	os.Setenv("POSTGRES_DB", "um_db")
-
 	os.Setenv("CONSUL_ADDRESS", "consul:8500")
 	os.Setenv("CONSUL_TOKEN", "token")
 
 	cfg, err := config.NewConfig()
-	if err != nil {
-		t.Fatal("want nil got error", err)
-	}
+	require.NoError(t, err)
 
 	testCases := []struct {
 		name     string
@@ -51,19 +50,52 @@ func TestNewConfig_Success(t *testing.T) {
 	}
 
 	for _, tt := range testCases {
-		assert.Equal(t, tt.got, tt.expected, "The two values should be equal.")
+		assert.Equal(t, tt.got, tt.expected, tt.name)
 	}
-}
 
-func TestNewConfig_Fail(t *testing.T) {
 	os.Unsetenv("POSTGRES_USER")
 
+	cfg, err = config.NewConfig()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "POSTGRES_USER")
+	assert.Nil(t, cfg)
+}
+
+func TestNewConfig_Default(t *testing.T) {
+	os.Setenv("POSTGRES_USER", "unused")
+	os.Setenv("POSTGRES_PASSWORD", "unused")
+	os.Setenv("POSTGRES_DB", "unused")
+	os.Setenv("CONSUL_ADDRESS", "unused:8500")
+	os.Setenv("CONSUL_TOKEN", "unused")
+
 	cfg, err := config.NewConfig()
-	if err == nil {
-		t.Error("want error got nil")
+	require.NoError(t, err)
+
+	testCases := []struct {
+		name     string
+		got      interface{}
+		expected interface{}
+	}{
+		{
+			name:     "BIND_IP",
+			got:      cfg.BindIP,
+			expected: "0.0.0.0",
+		}, {
+			name:     "BIND_PORT",
+			got:      cfg.BindPort,
+			expected: 8000,
+		}, {
+			name:     "READ_TIMEOUT",
+			got:      cfg.ReadTimeout.Seconds(),
+			expected: 60,
+		}, {
+			name:     "WRITE_TIMEOUT",
+			got:      cfg.WriteTimeout.Seconds(),
+			expected: 60,
+		},
 	}
 
-	if cfg != nil {
-		t.Errorf("want nil got %v", cfg)
+	for _, tt := range testCases {
+		assert.EqualValues(t, tt.got, tt.expected, tt.name)
 	}
 }
