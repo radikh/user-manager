@@ -5,7 +5,6 @@ package config
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -36,7 +35,7 @@ type Config struct {
 	LoggerLevel      string `envconfig:"LOGGER_LEVEL" default:"info"`
 	LoggerType       string `envconfig:"LOGGER_TYPE" default:"async"`
 
-	consulClient *consul.Client
+	sd serviceDiscovery
 }
 
 // NewConfig() create new configuration for application
@@ -55,10 +54,11 @@ func NewConfig() (*Config, error) {
 	}
 
 	// Create new consul client using prepared configuration
-	config.consulClient, err = consul.NewClient(consulConfig)
+	consulClient, err := consul.NewClient(consulConfig)
 	if err != nil {
 		return nil, fmt.Errorf("consul client error %w", err)
 	}
+	config.sd = consulSD{consul: consulClient}
 
 	return &config, nil
 }
@@ -67,20 +67,14 @@ func NewConfig() (*Config, error) {
 func (c *Config) LoggerConfig(ctx context.Context) (*logger.LogConfig, error) {
 	const serviceName = "graylog"
 
-	opts := new(consul.QueryOptions).WithContext(ctx)
-
-	services, _, err := c.consulClient.Catalog().Service(serviceName, "", opts)
+	host, port, err := c.sd.GetService(ctx, serviceName)
 	if err != nil {
-		return nil, fmt.Errorf("resolve graylog service error %w", err)
-	}
-
-	if len(services) == 0 {
-		return nil, errors.New("graylog service not found")
+		return nil, err
 	}
 
 	return &logger.LogConfig{
-		Host:       services[0].Address,
-		Port:       strconv.Itoa(services[0].ServicePort),
+		Host:       host,
+		Port:       strconv.Itoa(port),
 		PassSecret: c.LoggerPassSecret,
 		PassSHA2:   c.LoggerPassSHA2,
 		Output:     c.LoggerOutput,
@@ -93,19 +87,10 @@ func (c *Config) LoggerConfig(ctx context.Context) (*logger.LogConfig, error) {
 func (c *Config) DBConfig(ctx context.Context) (string, error) {
 	const serviceName = "db"
 
-	opts := new(consul.QueryOptions).WithContext(ctx)
-
-	services, _, err := c.consulClient.Catalog().Service(serviceName, "", opts)
+	host, port, err := c.sd.GetService(ctx, serviceName)
 	if err != nil {
-		return "", fmt.Errorf("resolve db service error %w", err)
+		return "", err
 	}
-
-	if len(services) == 0 {
-		return "", errors.New("db service not found")
-	}
-
-	host := services[0].Address
-	port := services[0].ServicePort
 
 	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		host, port, c.PostgresUser, c.PostgresPass, c.PostgresDB), nil
