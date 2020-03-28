@@ -69,11 +69,11 @@ func TestNewConfigDefault(t *testing.T) {
 		expected interface{}
 	}{
 		{
-			name:     "BIND_IP",
+			name:     "HTTP_IP",
 			got:      cfg.HTTPIP,
 			expected: "0.0.0.0",
 		}, {
-			name:     "BIND_PORT",
+			name:     "HTTP_PORT",
 			got:      cfg.HTTPPort,
 			expected: 8000,
 		}, {
