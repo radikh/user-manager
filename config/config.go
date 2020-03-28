@@ -7,7 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
+
+	"github.com/lvl484/user-manager/logger"
 
 	consul "github.com/hashicorp/consul/api"
 	"github.com/kelseyhightower/envconfig"
@@ -26,6 +29,12 @@ type Config struct {
 	HTTPPort     int           `envconfig:"HTTP_PORT" default:"8000"`
 	ReadTimeout  time.Duration `envconfig:"READ_TIMEOUT" default:"60s"`
 	WriteTimeout time.Duration `envconfig:"WRITE_TIMEOUT" default:"60s"`
+
+	LoggerPassSecret string `envconfig:"LOGGER_PASS_SECRET"`
+	LoggerPassSHA2   string `envconfig:"LOGGER_PASS_SHA2"`
+	LoggerOutput     string `envconfig:"LOGGER_OUTPUT" default:"Stdout"`
+	LoggerLevel      string `envconfig:"LOGGER_LEVEL" default:"info"`
+	LoggerType       string `envconfig:"LOGGER_TYPE" default:"async"`
 
 	consulClient *consul.Client
 }
@@ -55,24 +64,29 @@ func NewConfig() (*Config, error) {
 }
 
 // LoggerConfig get configurations for glaylog
-func (c *Config) LoggerConfig(ctx context.Context) (string, error) {
+func (c *Config) LoggerConfig(ctx context.Context) (*logger.LogConfig, error) {
 	const serviceName = "graylog"
 
 	opts := new(consul.QueryOptions).WithContext(ctx)
 
 	services, _, err := c.consulClient.Catalog().Service(serviceName, "", opts)
 	if err != nil {
-		return "", fmt.Errorf("resolve graylog service error %w", err)
+		return nil, fmt.Errorf("resolve graylog service error %w", err)
 	}
 
 	if len(services) == 0 {
-		return "", errors.New("graylog service not found")
+		return nil, errors.New("graylog service not found")
 	}
 
-	host := services[0].Address
-	port := services[0].ServicePort
-
-	return fmt.Sprintf("%s:%d", host, port), nil
+	return &logger.LogConfig{
+		Host:       services[0].Address,
+		Port:       strconv.Itoa(services[0].ServicePort),
+		PassSecret: c.LoggerPassSecret,
+		PassSHA2:   c.LoggerPassSHA2,
+		Output:     c.LoggerOutput,
+		Level:      c.LoggerLevel,
+		Type:       c.LoggerType,
+	}, nil
 }
 
 // DBConfig get configuration for Postgres Database
