@@ -1,71 +1,134 @@
+// Command umcli provides admin command line tool to manipulate accounts with admin rights.
 package pgclient
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/lvl484/user-manager/model"
 )
 
-type Postgres struct {
+var ErrUserDisable = errors.New("User is disabled, failed to update")
+
+type Users interface {
+	Add(args ...interface{}) error
+	Update(args ...interface{}) error
+	Delete(login string) error
+	Disable(login string) error
+	Activate(login string) error
+	GetInfo(login string) (*model.User, error)
+	CheckLoginExist(lo string) (bool, error)
+}
+
+type usersRepo struct {
 	db *sql.DB
 }
 
-// NewPostgres returns Postgres with db
-func NewPostgres(data *sql.DB) *Postgres {
-	return &Postgres{db: data}
+// NewUsersRepo returns usersRepo with db
+func NewUsersRepo(data *sql.DB) *usersRepo {
+	return &usersRepo{db: data}
 }
 
 const (
 	queryInsert     = `INSERT INTO users(id, user_name,password,email,first_name, last_name, phone, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`
 	queryUpdate     = `UPDATE users SET (password,email,first_name, last_name, phone, updated_at)=($1,$2,$3,$4,$5,$6) WHERE user_name=$7`
 	queryDelete     = `DELETE FROM users WHERE user_name=$1`
-	queryDisable    = ``
-	querySelectInfo = `SELECT user_name,email,first_name, last_name, phone FROM users WHERE user_name=$1`
+	queryDisable    = `UPDATE users SET salted=$1 WHERE user_name=$2`
+	querySelectInfo = `SELECT id,user_name,email,first_name, last_name, phone FROM users WHERE user_name=$1`
+	queryAlive      = `SELECT salted FROM users WHERE user_name=$1`
+	queryCheckLogin = `SELECT count(id) FROM users WHERE user_name=$1`
 )
 
 // AddUser adds new user to database
-func (pg *Postgres) AddUser(user *model.User) error {
-	_, err := pg.db.Query(queryInsert, user.ID, user.Username, user.Password, user.Email, user.FirstName, user.LastName, user.Phone, time.Now())
-
+func (ur *usersRepo) Add(user *model.User) error {
+	pwd, err := EncodePassword(NewPasswordConfig(), user.Password)
+	if err != nil {
+		return err
+	}
+	ui, err := uuid.NewRandom()
+	if err != nil {
+		return err
+	}
+	_, err = ur.db.Query(queryInsert, ui, user.Username, pwd, user.Email, user.FirstName, user.LastName, user.Phone, time.Now())
 	return err
 }
 
 // UpdateUser update information about user in database
-func (pg *Postgres) UpdateUser(user *model.User) error {
-	_, err := pg.db.Exec(queryUpdate, user.Password, user.Email, user.FirstName, user.LastName, user.Phone, time.Now(), user.Username)
+func (ur *usersRepo) Update(user *model.User) error {
+	salted, err := ur.getUserDiactived(user.Username)
+	if err != nil {
+		return err
+	}
+	if salted {
+		return ErrUserDisable
+	}
+	pwd, err := EncodePassword(NewPasswordConfig(), user.Password)
+	if err != nil {
+		return err
+	}
+	_, err = ur.db.Exec(queryUpdate, pwd, user.Email, user.FirstName, user.LastName, user.Phone, time.Now(), user.Username)
 
 	return err
 }
 
 // DeleteUser delete information about user in database
-func (pg *Postgres) DeleteUser(login string) error {
-	_, err := pg.db.Exec(queryDelete, login)
+func (ur *usersRepo) Delete(login string) error {
+	_, err := ur.db.Exec(queryDelete, login)
 
 	return err
 }
 
 // DisableUser deactivate information about user in database
-func (pg *Postgres) DisableUser(login string) error {
-	_, err := pg.db.Exec(queryDisable, login)
+func (ur *usersRepo) Disable(login string) error {
+	_, err := ur.db.Exec(queryDisable, "true", login)
+
+	return err
+}
+
+// DisableUser deactivate information about user in database
+func (ur *usersRepo) Activate(login string) error {
+	_, err := ur.db.Exec(queryDisable, "false", login)
 
 	return err
 }
 
 // GetUserInfo get user information from database
-func (pg *Postgres) GetUserInfo(login string) (*model.User, error) {
+func (ur *usersRepo) GetInfo(login string) (*model.User, error) {
+	salted, err := ur.getUserDiactived(login)
+	if err != nil {
+		return nil, err
+	}
+	if salted {
+		return nil, ErrUserDisable
+	}
 	var usr model.User
-	row, err := pg.db.Query(querySelectInfo, login)
+	row, err := ur.db.Query(querySelectInfo, login)
 	if err != nil {
 		return nil, err
 	}
 	defer row.Close()
 	for row.Next() {
-		err = row.Scan(usr.Username, usr.Email, usr.FirstName, usr.LastName, usr.Phone)
+		err = row.Scan(usr.ID, usr.Username, usr.Email, usr.FirstName, usr.LastName, usr.Phone)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	return &usr, nil
+}
+
+func (ur *usersRepo) getUserDiactived(login string) (bool, error) {
+	result := false
+	err := ur.db.QueryRow(queryAlive, login).Scan(result)
+
+	return result, err
+}
+
+func (ur *usersRepo) CheckLoginExist(login string) (bool, error) {
+	result := 0
+	err := ur.db.QueryRow(queryCheckLogin, login).Scan(result)
+
+	return result == 1, err
 }
