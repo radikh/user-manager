@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewConfig_Required(t *testing.T) {
+func TestNewConfigRequired(t *testing.T) {
 	os.Setenv("POSTGRES_USER", "postgres")
 	os.Setenv("POSTGRES_PASSWORD", "1q2w3e4r")
 	os.Setenv("POSTGRES_DB", "um_db")
@@ -61,7 +61,7 @@ func TestNewConfig_Required(t *testing.T) {
 	assert.Nil(t, cfg)
 }
 
-func TestNewConfig_Default(t *testing.T) {
+func TestNewConfigDefault(t *testing.T) {
 	os.Setenv("POSTGRES_USER", "unused")
 	os.Setenv("POSTGRES_PASSWORD", "unused")
 	os.Setenv("POSTGRES_DB", "unused")
