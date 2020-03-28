@@ -6,7 +6,6 @@ package config
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/lvl484/user-manager/logger"
@@ -35,7 +34,7 @@ type Config struct {
 	LoggerLevel      string `envconfig:"LOGGER_LEVEL" default:"info"`
 	LoggerType       string `envconfig:"LOGGER_TYPE" default:"async"`
 
-	sd serviceDiscovery
+	sd ServiceDiscovery
 }
 
 // NewConfig() create new configuration for application
@@ -74,7 +73,7 @@ func (c *Config) LoggerConfig(ctx context.Context) (*logger.LogConfig, error) {
 
 	return &logger.LogConfig{
 		Host:       host,
-		Port:       strconv.Itoa(port),
+		Port:       port,
 		PassSecret: c.LoggerPassSecret,
 		PassSHA2:   c.LoggerPassSHA2,
 		Output:     c.LoggerOutput,

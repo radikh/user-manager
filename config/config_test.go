@@ -1,10 +1,10 @@
-package config_test
+package config
 
 import (
+	"context"
+	"errors"
 	"os"
 	"testing"
-
-	"github.com/lvl484/user-manager/config"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,7 +17,7 @@ func TestNewConfigRequired(t *testing.T) {
 	os.Setenv("CONSUL_ADDRESS", "consul:8500")
 	os.Setenv("CONSUL_TOKEN", "token")
 
-	cfg, err := config.NewConfig()
+	cfg, err := NewConfig()
 	require.NoError(t, err)
 
 	testCases := []struct {
@@ -60,7 +60,7 @@ func TestNewConfigDefault(t *testing.T) {
 	os.Setenv("CONSUL_ADDRESS", "unused:8500")
 	os.Setenv("CONSUL_TOKEN", "unused")
 
-	cfg, err := config.NewConfig()
+	cfg, err := NewConfig()
 	require.NoError(t, err)
 
 	testCases := []struct {
@@ -95,9 +95,69 @@ func TestNewConfigDefault(t *testing.T) {
 func TestNewConfig(t *testing.T) {
 	os.Unsetenv("POSTGRES_USER")
 
-	cfg, err := config.NewConfig()
+	cfg, err := NewConfig()
 
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "POSTGRES_USER")
 	assert.Nil(t, cfg)
+}
+
+func TestConfigServerAddress(t *testing.T) {
+	c := Config{
+		HTTPIP:   "sun",
+		HTTPPort: 9999,
+	}
+	assert.Equal(t, "sun:9999", c.ServerAddress())
+}
+
+func TestConfigDBConfig(t *testing.T) {
+	sd := &MockSD{
+		Address: "moon",
+		Port:    9999,
+	}
+	c := Config{
+		PostgresUser: "postgres",
+		PostgresPass: "1q2w3e4r",
+		PostgresDB:   "um_db",
+		sd:           sd,
+	}
+
+	got, err := c.DBConfig(context.Background())
+	require.NoError(t, err)
+
+	assert.Equal(t, "host=moon port=9999 user=postgres password=1q2w3e4r dbname=um_db sslmode=disable", got)
+
+	sd.Err = errors.New("negative test case")
+	got, err = c.DBConfig(context.Background())
+	assert.Error(t, err)
+}
+
+func TestConfigLoggerConfig(t *testing.T) {
+	sd := &MockSD{
+		Address: "moon",
+		Port:    8888,
+	}
+	c := Config{
+		LoggerPassSecret: "secretPass",
+		LoggerPassSHA2:   "SHA2Pass",
+		LoggerOutput:     "Stdout",
+		LoggerLevel:      "info",
+		LoggerType:       "async",
+		sd:               sd,
+	}
+
+	got, err := c.LoggerConfig(context.Background())
+	require.NoError(t, err)
+
+	assert.Equal(t, sd.Port, got.Port)
+	assert.Equal(t, sd.Address, got.Host)
+	assert.Equal(t, c.LoggerPassSecret, got.PassSecret)
+	assert.Equal(t, c.LoggerPassSHA2, got.PassSHA2)
+	assert.Equal(t, c.LoggerOutput, got.Output)
+	assert.Equal(t, c.LoggerLevel, got.Level)
+	assert.Equal(t, c.LoggerType, got.Type)
+
+	sd.Err = errors.New("negative test case")
+	got, err = c.LoggerConfig(context.Background())
+	assert.Error(t, err)
 }

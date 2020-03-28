@@ -69,7 +69,7 @@ func TestConfigLogger(t *testing.T) {
 	logger := log.New()
 	conf := &LogConfig{
 		Host:       "GREYLOGHOST",
-		Port:       "77777",
+		Port:       77777,
 		PassSecret: "secretpassword",
 		PassSHA2:   "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
 		Output:     "Graylog",
@@ -77,7 +77,7 @@ func TestConfigLogger(t *testing.T) {
 	}
 	incorrectConf := &LogConfig{
 		Host:       "locallviv",
-		Port:       "15000",
+		Port:       15000,
 		PassSecret: "root",
 		PassSHA2:   "asdfsdfdsfewffsdvsvdsvfdsvsvsd",
 		Output:     "Greenlog",
@@ -149,7 +149,7 @@ func TestLogConfigSetLoggerToGraylog(t *testing.T) {
 	logger := log.New()
 	conf := &LogConfig{
 		Host:       "GREYLOGHOST",
-		Port:       "77777",
+		Port:       77777,
 		PassSecret: "secretpassword",
 		PassSHA2:   "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
 		Output:     "Graylog",
@@ -157,7 +157,7 @@ func TestLogConfigSetLoggerToGraylog(t *testing.T) {
 	}
 	incorrectConf := &LogConfig{
 		Host:       "locallviv",
-		Port:       "15000",
+		Port:       15000,
 		PassSecret: "root",
 		PassSHA2:   "asdfsdfdsfewffsdvsvdsvfdsvsvsd",
 		Output:     "Greenlog",

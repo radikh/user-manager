@@ -7,7 +7,7 @@ import (
 	consul "github.com/hashicorp/consul/api"
 )
 
-type serviceDiscovery interface {
+type ServiceDiscovery interface {
 	GetService(ctx context.Context, name string) (string, int, error)
 }
 

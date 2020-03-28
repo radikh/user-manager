@@ -18,7 +18,7 @@ type NullFormatter struct {
 // StorageConfig contains fields used in Connect for DSN
 type LogConfig struct {
 	Host       string
-	Port       string
+	Port       int
 	PassSecret string
 	PassSHA2   string
 	Output     string
