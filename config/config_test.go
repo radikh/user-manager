@@ -4,11 +4,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/lvl484/user-manager/config"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewConfigRequired(t *testing.T) {
@@ -52,13 +51,6 @@ func TestNewConfigRequired(t *testing.T) {
 	for _, tt := range testCases {
 		assert.Equal(t, tt.got, tt.expected, tt.name)
 	}
-
-	os.Unsetenv("POSTGRES_USER")
-
-	cfg, err = config.NewConfig()
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "POSTGRES_USER")
-	assert.Nil(t, cfg)
 }
 
 func TestNewConfigDefault(t *testing.T) {
@@ -78,11 +70,11 @@ func TestNewConfigDefault(t *testing.T) {
 	}{
 		{
 			name:     "BIND_IP",
-			got:      cfg.BindIP,
+			got:      cfg.HTTPIP,
 			expected: "0.0.0.0",
 		}, {
 			name:     "BIND_PORT",
-			got:      cfg.BindPort,
+			got:      cfg.HTTPPort,
 			expected: 8000,
 		}, {
 			name:     "READ_TIMEOUT",
@@ -98,4 +90,14 @@ func TestNewConfigDefault(t *testing.T) {
 	for _, tt := range testCases {
 		assert.EqualValues(t, tt.got, tt.expected, tt.name)
 	}
+}
+
+func TestNewConfig(t *testing.T) {
+	os.Unsetenv("POSTGRES_USER")
+
+	cfg, err := config.NewConfig()
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "POSTGRES_USER")
+	assert.Nil(t, cfg)
 }

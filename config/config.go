@@ -22,8 +22,8 @@ type Config struct {
 	ConsulAddress string `envconfig:"CONSUL_ADDRESS" required:"true"`
 	ConsulToken   string `envconfig:"CONSUL_TOKEN" required:"true"`
 
-	BindIP       string        `envconfig:"BIND_IP" default:"0.0.0.0"`
-	BindPort     int           `envconfig:"BIND_PORT" default:"8000"`
+	HTTPIP       string        `envconfig:"HTTP_IP" default:"0.0.0.0"`
+	HTTPPort     int           `envconfig:"HTTP_PORT" default:"8000"`
 	ReadTimeout  time.Duration `envconfig:"READ_TIMEOUT" default:"60s"`
 	WriteTimeout time.Duration `envconfig:"WRITE_TIMEOUT" default:"60s"`
 
@@ -57,7 +57,7 @@ func NewConfig() (*Config, error) {
 // LoggerConfig get configurations for glaylog
 func (c *Config) LoggerConfig(ctx context.Context) (string, error) {
 	const serviceName = "graylog"
-	c.ServerAddress()
+
 	opts := new(consul.QueryOptions).WithContext(ctx)
 
 	services, _, err := c.consulClient.Catalog().Service(serviceName, "", opts)
@@ -98,5 +98,5 @@ func (c *Config) DBConfig(ctx context.Context) (string, error) {
 }
 
 func (c *Config) ServerAddress() string {
-	return fmt.Sprintf("%s:%d", c.BindIP, c.BindPort)
+	return fmt.Sprintf("%s:%d", c.HTTPIP, c.HTTPPort)
 }
