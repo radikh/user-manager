@@ -72,7 +72,7 @@ func main() {
 	// pgConfig will be taken from package config, but it hasn't ready yet
 	pgConfig := storage.DBConfig{
 		Host:     "127.0.0.1",
-		Port:     "5432",
+		Port:     5432,
 		User:     "postgres",
 		Password: "postgres",
 		DBName:   "um_db",
@@ -82,7 +82,9 @@ func main() {
 	if err != nil {
 		Log.Error("%v\n", err)
 	}
-	Log.Info("Successfully connected to %s", storage.DBConfig.DBName)
+
+	Log.Info("Successfully connected to %s", pgConfig.DBName)
+
 	closers = append(closers, db)
 
 	// TODO: There will be actual information about consul in future
