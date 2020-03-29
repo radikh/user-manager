@@ -83,7 +83,7 @@ func main() {
 		Log.Error("%v\n", err)
 	}
 	Log.Info("Successfully connected to %s", storage.DBConfig.DBName)
-	defer db.Close()
+	closers = append(closers, db)
 
 	// TODO: There will be actual information about consul in future
 	// ...
