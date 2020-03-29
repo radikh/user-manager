@@ -29,18 +29,14 @@ func ConnectToDB(pg *DBConfig) (*sql.DB, error) {
 
 	database, err := sql.Open("postgres", pgConfig)
 	if err != nil {
-		log.Print("Could not connect to ", pg.DBName)
 		return nil, err
 	}
 
 	err = database.Ping()
 
 	if err != nil {
-		log.Print("Could not connect to ", pg.DBName)
 		return nil, err
 	}
-
-	log.Print("Successfully connected to ", pg.DBName)
 
 	return database, nil
 }

@@ -16,11 +16,10 @@ import (
 	"time"
 
 	_ "github.com/lib/pq"
-	"github.com/lvl484/user-manager/storage"
-	"github.com/sirupsen/logrus"
-
 	"github.com/lvl484/user-manager/config"
 	"github.com/lvl484/user-manager/logger"
+	"github.com/lvl484/user-manager/storage"
+	"github.com/sirupsen/logrus"
 )
 
 const gracefulShutdownTimeOut = 10 * time.Second
@@ -81,8 +80,9 @@ func main() {
 
 	db, err := storage.ConnectToDB(&pgConfig)
 	if err != nil {
-		log.Print(err)
+		Log.Error("%v\n", err)
 	}
+	Log.Info("Successfully connected to %s", storage.DBConfig.DBName)
 	defer db.Close()
 
 	// TODO: There will be actual information about consul in future

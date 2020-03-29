@@ -2,8 +2,6 @@ package storage
 
 import (
 	"testing"
-
-	_ "github.com/lib/pq"
 )
 
 func TestConnectToDB(t *testing.T) {
