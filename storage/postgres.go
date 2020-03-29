@@ -5,7 +5,6 @@ package storage
 import (
 	"database/sql"
 	"fmt"
-	"log"
 
 	// _ is used for registering the pq driver as a database driver,
 	// without importing any other functions
@@ -15,7 +14,7 @@ import (
 // Config of Postgres DB
 type DBConfig struct {
 	Host     string
-	Port     string
+	Port     int
 	User     string
 	Password string
 	DBName   string

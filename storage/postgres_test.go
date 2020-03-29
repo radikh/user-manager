@@ -7,7 +7,7 @@ import (
 func TestConnectToDB(t *testing.T) {
 	conf := &DBConfig{
 		Host:     "127.0.0.1",
-		Port:     "5432",
+		Port:     5432,
 		User:     "postgres",
 		Password: "postgres",
 		DBName:   "um_db",
@@ -15,7 +15,7 @@ func TestConnectToDB(t *testing.T) {
 
 	incorrectConf := &DBConfig{
 		Host:     "host",
-		Port:     "port",
+		Port:     1111,
 		User:     "user",
 		Password: "pasword",
 		DBName:   "DBName",
