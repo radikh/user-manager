@@ -1,40 +1,30 @@
 version: '3'
-
-networks:
-  gpsnet:
-    driver: bridge
-
 services:
 
   mongo:
     image: mongo:4.1
-    networks:
-      - gpsnet
   
   elasticsearch:
-    image:  docker.elastic.co/elasticsearch/elasticsearch:7.6.1
+    image:  docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.2
+    restart: on-failure:10
     environment:
       - http.host=0.0.0.0
-      - transport.host=localhost
+      - transport.host=localhost  
       - network.host=0.0.0.0
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
       memlock:
         soft: -1
         hard: -1
-    networks:
-      - gpsnet
-  
+
   graylog:
-    image: graylog/graylog:3.2
-    networks:
-      - gpsnet
+    image: graylog/graylog:3.2.3
     env_file:
       - .env
     links:
       - mongo
-      - elasticsearch
-    depends_on:
+      - elasticsearch  
+    depends_on: 
       - mongo
       - elasticsearch
     ports:
@@ -51,9 +41,6 @@ services:
   
   db:
     image: "postgres:12.2"
-    restart: unless-stopped
-    networks:
-      - "gpsnet"
     env_file:
       - ".env"
     volumes:
@@ -61,11 +48,10 @@ services:
       - ./migrator/init:/docker-entrypoint-initdb.d/
     ports:
       - 5432:5432
+
   migrator:
     image: "migrate/migrate"
     restart: on-failure:10
-    networks:
-      - "gpsnet"
     volumes: 
       - ./migrator/migrations:/migrations
     env_file:
@@ -75,8 +61,6 @@ services:
       - "db"
      
   consul-agent: 
-    networks:
-      - gpsnet
     build: ./infra/consul
     command: "-retry-join consul-server-bootstrap -client 0.0.0.0"
     depends_on:
@@ -84,8 +68,6 @@ services:
 
   consul-server-1: &consul-server
     image: consul:1.7.1
-    networks:
-      - gpsnet
     command: "agent -server -retry-join consul-server-bootstrap -client 0.0.0.0"
 
   consul-server-2:
@@ -93,8 +75,6 @@ services:
 
   consul-server-bootstrap:
     image: consul:1.7.1
-    networks:
-      - gpsnet
     ports:
       - "8400:8400"
       - "8500:8500"
@@ -104,10 +84,8 @@ services:
   
   usermanager:
     image: github.com/lvl484/user-manager
-    networks:
-      - gpsnet
     ports:
-      - "8000:8000"
+      - "8002:8002"
       - "8001:8001"
     env_file:
       - .env
