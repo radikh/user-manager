@@ -60,6 +60,7 @@ func TestGracefulShutdown_Fail(t *testing.T) {
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
 	err := gracefulShutdown(1*time.Nanosecond, wg, new(http.Server), closers...)
+
 	if err == nil {
 		t.Error("want error got nil")
 	}
