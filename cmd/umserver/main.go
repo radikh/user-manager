@@ -81,6 +81,7 @@ func main() {
 	db, err := storage.ConnectToDB(&pgConfig)
 	if err != nil {
 		Log.Error("%v\n", err)
+		return
 	}
 
 	Log.Info("Successfully connected to %s", pgConfig.DBName)
