@@ -19,11 +19,6 @@ services:
 
   graylog:
     image: graylog/graylog:3.2.3
-<<<<<<< HEAD
-    networks:
-      - gpsnet
-=======
->>>>>>> master
     env_file:
       - .env
     links:
