@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"log"
 
-	// _ mean that we can use all function from this package
+	// _ is used for registering the pq driver as a database driver,
+	// without importing any other functions
 	_ "github.com/lib/pq"
 )
 
