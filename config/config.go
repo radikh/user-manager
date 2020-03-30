@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/lvl484/user-manager/storage"
+
 	"github.com/lvl484/user-manager/logger"
 
 	consul "github.com/hashicorp/consul/api"
@@ -83,16 +85,21 @@ func (c *Config) LoggerConfig(ctx context.Context) (*logger.LogConfig, error) {
 }
 
 // DBConfig get configuration for Postgres Database
-func (c *Config) DBConfig(ctx context.Context) (string, error) {
+func (c *Config) DBConfig(ctx context.Context) (*storage.DBConfig, error) {
 	const serviceName = "db"
 
 	host, port, err := c.sd.GetService(ctx, serviceName)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		host, port, c.PostgresUser, c.PostgresPass, c.PostgresDB), nil
+	return &storage.DBConfig{
+		Host:     host,
+		Port:     port,
+		User:     c.PostgresUser,
+		Password: c.PostgresPass,
+		DBName:   c.PostgresDB,
+	}, nil
 }
 
 func (c *Config) ServerAddress() string {

@@ -125,7 +125,11 @@ func TestConfigDBConfig(t *testing.T) {
 	got, err := c.DBConfig(context.Background())
 	require.NoError(t, err)
 
-	assert.Equal(t, "host=moon port=9999 user=postgres password=1q2w3e4r dbname=um_db sslmode=disable", got)
+	assert.Equal(t, sd.Port, got.Port)
+	assert.Equal(t, sd.Address, got.Host)
+	assert.Equal(t, c.PostgresUser, got.User)
+	assert.Equal(t, c.PostgresPass, got.Password)
+	assert.Equal(t, c.PostgresDB, got.DBName)
 
 	sd.Err = errors.New("negative test case")
 	got, err = c.DBConfig(context.Background())
