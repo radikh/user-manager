@@ -1,5 +1,5 @@
 // Command umcli provides admin command line tool to manipulate accounts with admin rights.
-package pgclient
+package main
 
 import (
 	"database/sql"
@@ -9,27 +9,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/lvl484/user-manager/model"
 )
-
-var ErrUserDisable = errors.New("User is disabled, failed to update")
-
-type Users interface {
-	Add(args ...interface{}) error
-	Update(args ...interface{}) error
-	Delete(login string) error
-	Disable(login string) error
-	Activate(login string) error
-	GetInfo(login string) (*model.User, error)
-	CheckLoginExist(lo string) (bool, error)
-}
-
-type usersRepo struct {
-	db *sql.DB
-}
-
-// NewUsersRepo returns usersRepo with db
-func NewUsersRepo(data *sql.DB) *usersRepo {
-	return &usersRepo{db: data}
-}
 
 const (
 	queryInsert     = `INSERT INTO users(id, user_name,password,email,first_name, last_name, phone, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`
@@ -41,7 +20,19 @@ const (
 	queryCheckLogin = `SELECT count(id) FROM users WHERE user_name=$1`
 )
 
-// AddUser adds new user to database
+var ErrUserDisable = errors.New("User is disabled, failed to update")
+
+// usersRepo structure that contain pointer to database
+type usersRepo struct {
+	db *sql.DB
+}
+
+// NewUsersRepo returns usersRepo with db
+func NewUsersRepo(data *sql.DB) *usersRepo {
+	return &usersRepo{db: data}
+}
+
+// Add adds new user to database
 func (ur *usersRepo) Add(user *model.User) error {
 	pwd, err := EncodePassword(NewPasswordConfig(), user.Password)
 	if err != nil {
@@ -55,9 +46,9 @@ func (ur *usersRepo) Add(user *model.User) error {
 	return err
 }
 
-// UpdateUser update information about user in database
+// Update update information about user in database
 func (ur *usersRepo) Update(user *model.User) error {
-	salted, err := ur.getUserDiactived(user.Username)
+	salted, err := ur.getUserDeactivated(user.Username)
 	if err != nil {
 		return err
 	}
@@ -73,30 +64,30 @@ func (ur *usersRepo) Update(user *model.User) error {
 	return err
 }
 
-// DeleteUser delete information about user in database
+// Delete delete information about user in database
 func (ur *usersRepo) Delete(login string) error {
 	_, err := ur.db.Exec(queryDelete, login)
 
 	return err
 }
 
-// DisableUser deactivate information about user in database
+// Disable deactivate information about user in database
 func (ur *usersRepo) Disable(login string) error {
 	_, err := ur.db.Exec(queryDisable, "true", login)
 
 	return err
 }
 
-// DisableUser deactivate information about user in database
+// Activate deactivate information about user in database
 func (ur *usersRepo) Activate(login string) error {
 	_, err := ur.db.Exec(queryDisable, "false", login)
 
 	return err
 }
 
-// GetUserInfo get user information from database
+// GetInfo get user information from database
 func (ur *usersRepo) GetInfo(login string) (*model.User, error) {
-	salted, err := ur.getUserDiactived(login)
+	salted, err := ur.getUserDeactivated(login)
 	if err != nil {
 		return nil, err
 	}
@@ -119,13 +110,15 @@ func (ur *usersRepo) GetInfo(login string) (*model.User, error) {
 	return &usr, nil
 }
 
-func (ur *usersRepo) getUserDiactived(login string) (bool, error) {
+// getUserDeactivated show if user is deactivated
+func (ur *usersRepo) getUserDeactivated(login string) (bool, error) {
 	result := false
 	err := ur.db.QueryRow(queryAlive, login).Scan(result)
 
 	return result, err
 }
 
+// CheckLoginExist check information about existing user with such login
 func (ur *usersRepo) CheckLoginExist(login string) (bool, error) {
 	result := 0
 	err := ur.db.QueryRow(queryCheckLogin, login).Scan(result)

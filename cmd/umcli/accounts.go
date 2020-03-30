@@ -1,20 +1,15 @@
 // Command umcli provides admin command line tool to manipulate accounts with admin rights.
-package pgclient
+package main
 
 import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/lvl484/user-manager/logger"
 	"github.com/lvl484/user-manager/model"
 )
 
-type Account interface {
-	CreateAccount(w http.ResponseWriter, r *http.Request)
-	GetInfoAccount(w http.ResponseWriter, r *http.Request)
-	UpdateAccount(w http.ResponseWriter, r *http.Request)
-	DeleteAccount(w http.ResponseWriter, r *http.Request)
-}
-
+// StatusAccount structure that hold responce of User Manager client subservice
 type StatusAccount struct {
 	code    int
 	message string
@@ -32,6 +27,7 @@ var (
 	StatusUnexpectedError    = StatusAccount{code: 444, message: "Unexpected error"}
 )
 
+// CreateAccount create a new account in database
 func (ur *usersRepo) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	var user *model.User
 	err := json.NewDecoder(r.Body).Decode(&user)
@@ -59,9 +55,13 @@ func (ur *usersRepo) CreateAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(StatusCreateOK.code)
-	w.Write([]byte(StatusCreateOK.message))
+	_, err = w.Write([]byte(StatusCreateOK.message))
+	if err != nil {
+		logger.LogUM.Error(err)
+	}
 }
 
+// GetInfoAccount check if account exist and return info about user
 func (ur *usersRepo) GetInfoAccount(w http.ResponseWriter, r *http.Request) {
 	var user *model.User
 	err := json.NewDecoder(r.Body).Decode(&user)
@@ -89,9 +89,13 @@ func (ur *usersRepo) GetInfoAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(StatusInfoOK.code)
-	w.Write([]byte(StatusInfoOK.message))
+	_, err = w.Write([]byte(StatusInfoOK.message))
+	if err != nil {
+		logger.LogUM.Error(err)
+	}
 }
 
+// UpdateAccount update data of account
 func (ur *usersRepo) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 	var user *model.User
 	err := json.NewDecoder(r.Body).Decode(&user)
@@ -119,9 +123,13 @@ func (ur *usersRepo) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(StatusUpdateOK.code)
-	w.Write([]byte(StatusUpdateOK.message))
+	_, err = w.Write([]byte(StatusUpdateOK.message))
+	if err != nil {
+		logger.LogUM.Error(err)
+	}
 }
 
+// DeleteAccount deletes account of user in database
 func (ur *usersRepo) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	var user *model.User
 	err := json.NewDecoder(r.Body).Decode(&user)
@@ -144,5 +152,53 @@ func (ur *usersRepo) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(StatusDeleteOK.code)
-	w.Write([]byte(StatusDeleteOK.message))
+	_, err = w.Write([]byte(StatusDeleteOK.message))
+	if err != nil {
+		logger.LogUM.Error(err)
+	}
+}
+
+// ValidateAccount check if such account exist, check password and return user's info
+func (ur *usersRepo) ValidateAccount(w http.ResponseWriter, r *http.Request) {
+	var user, dbuser *model.User
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		http.Error(w, StatusBadRequest.message, StatusBadRequest.code)
+		return
+	}
+	loginExist, err := ur.CheckLoginExist(user.Username)
+	if err != nil {
+		http.Error(w, StatusUnexpectedError.message, StatusUnexpectedError.code)
+		return
+	}
+	if !loginExist {
+		http.Error(w, StatusAccountNotExist.message, StatusAccountNotExist.code)
+		return
+	}
+
+	user, err = ur.GetInfo(user.Username)
+	if err != nil {
+		http.Error(w, StatusUnexpectedError.message, StatusUnexpectedError.code)
+		return
+	}
+
+	pwdValid, err := ComparePassword(user.Password, dbuser.Password)
+	if err != nil {
+		http.Error(w, StatusUnexpectedError.message, StatusUnexpectedError.code)
+		return
+	}
+	if !pwdValid {
+		http.Error(w, StatusAuthenticateFailed.message, StatusAuthenticateFailed.code)
+		return
+	}
+	err = json.NewEncoder(w).Encode(dbuser)
+	if err != nil {
+		http.Error(w, StatusUnexpectedError.message, StatusUnexpectedError.code)
+		return
+	}
+	w.WriteHeader(StatusInfoOK.code)
+	_, err = w.Write([]byte(StatusInfoOK.message))
+	if err != nil {
+		logger.LogUM.Error(err)
+	}
 }

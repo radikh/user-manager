@@ -87,14 +87,14 @@ func TestConfigLogger(t *testing.T) {
 	logger := log.New()
 	conf := &LogConfig{
 		Host:       v.GetString(loggerHost),
-		Port:       v.GetString(loggerPort),
+		Port:       v.GetInt(loggerPort),
 		PassSecret: v.GetString(loggerPassSecret),
 		PassSHA2:   v.GetString(loggerPassSHA2),
 		Output:     v.GetString(loggerOutput),
 	}
 	incorrectConf := &LogConfig{
 		Host:       "locallviv",
-		Port:       "15000",
+		Port:       15000,
 		PassSecret: "root",
 		PassSHA2:   "asdfsdfdsfewffsdvsvdsvfdsvsvsd",
 		Output:     "Greenlog",
@@ -132,7 +132,7 @@ func TestConfigLogger(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ConfigLogger(logger, tt.lc)
+			err := configLogger(logger, tt.lc)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewLogger() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -178,14 +178,14 @@ func TestLogConfigSetLoggerToGraylog(t *testing.T) {
 	logger := log.New()
 	conf := &LogConfig{
 		Host:       v.GetString(loggerHost),
-		Port:       v.GetString(loggerPort),
+		Port:       v.GetInt(loggerPort),
 		PassSecret: v.GetString(loggerPassSecret),
 		PassSHA2:   v.GetString(loggerPassSHA2),
 		Output:     v.GetString(loggerOutput),
 	}
 	incorrectConf := &LogConfig{
 		Host:       "locallviv",
-		Port:       "15000",
+		Port:       15000,
 		PassSecret: "root",
 		PassSHA2:   "asdfsdfdsfewffsdvsvdsvfdsvsvsd",
 		Output:     "Greenlog",
@@ -209,7 +209,7 @@ func TestLogConfigSetLoggerToGraylog(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ConfigLogger(logger, tt.lc)
+			err := configLogger(logger, tt.lc)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewLogger() error = %v, wantErr %v", err, tt.wantErr)
 				return

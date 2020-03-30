@@ -1,5 +1,5 @@
 // Command umcli provides admin command line tool to manipulate accounts with admin rights.
-package pgclient
+package main
 
 import (
 	"crypto/rand"
@@ -15,7 +15,7 @@ const (
 	configTime    = 3
 	configMemory  = 64 * 1024
 	configThreads = 1
-	configKeyLen  = 64
+	configKeyLen  = 4
 )
 
 type PasswordConfig struct {

@@ -15,6 +15,7 @@ require (
 	github.com/sirupsen/logrus v1.5.0
 	github.com/spf13/viper v1.6.2
 	github.com/stretchr/testify v1.5.1
+	github.com/urfave/cli/v2 v2.2.0
 	golang.org/x/crypto v0.0.0-20191106202628-ed6320f186d4
 	golang.org/x/text v0.3.2
 	gopkg.in/gemnasium/logrus-graylog-hook.v2 v2.0.7

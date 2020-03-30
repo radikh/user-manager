@@ -1,26 +1,28 @@
 // Command umcli provides admin command line tool to manipulate accounts with admin rights.
-package pgclient
+package main
 
 import (
+	"log"
 	"os"
 
-	"github.com/mitchellh/cli"
+	"github.com/urfave/cli/v2"
+)
 
-	"github.com/lvl484/user-manager/logger"
+const (
+	nameAPP  = "umcli"
+	usageAPP = "Command line tool to manipulate accounts with admin rights"
 )
 
 func main() {
-	c := cli.NewCLI("umcli", "1.0.0")
-	c.Args = os.Args[1:]
-	c.Commands = map[string]cli.CommandFactory{
-		//		"foo": fooCommandFactory,
-		//		"bar": barCommandFactory,
-	}
+	app := cli.NewApp()
 
-	exitStatus, err := c.Run()
+	app.Name = nameAPP
+	app.Usage = usageAPP
+
+	app.Commands = GetCommands()
+
+	err := app.Run(os.Args)
 	if err != nil {
-		logger.LogUM.Error(err)
+		log.Fatal(err)
 	}
-
-	os.Exit(exitStatus)
 }

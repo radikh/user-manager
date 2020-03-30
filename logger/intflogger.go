@@ -2,6 +2,12 @@
 // Supports log levels and destination.
 package logger
 
+import (
+	"fmt"
+
+	"github.com/sirupsen/logrus"
+)
+
 // Log is a package level variable that access logging function through "Log"
 var LogUM Logger
 
@@ -12,7 +18,7 @@ type NullFormatter struct {
 // StorageConfig contains fileds used in Connect for DSN
 type LogConfig struct {
 	Host       string
-	Port       string
+	Port       int
 	PassSecret string
 	PassSHA2   string
 	Output     string
@@ -36,6 +42,16 @@ type Logger interface {
 }
 
 // SetLogger is the setter for Log variable
-func SetLogger(newLogger Logger) {
-	LogUM = newLogger
+// SetLogger is the setter for Log variable
+func SetLogger(cfg *LogConfig) error {
+	log := logrus.New()
+
+	err := configLogger(log, cfg)
+	if err != nil {
+		return fmt.Errorf("setlogger error: %w", err)
+	}
+
+	LogUM = log
+
+	return nil
 }

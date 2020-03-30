@@ -1,10 +1,17 @@
 version: "3"
+
+networks:
+  gpsnet:
+    driver: bridge
+
 services:
   mongo:
     image: mongo:4.1
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.2
+    networks:
+      - gpsnet
     restart: on-failure:10
     environment:
       - http.host=0.0.0.0
@@ -42,6 +49,8 @@ services:
 
   db:
     image: "postgres:12.2"
+    networks:
+      - gpsnet
     env_file:
       - ".env"
     volumes:
@@ -52,6 +61,8 @@ services:
 
   migrator:
     image: "migrate/migrate"
+    networks:
+      - gpsnet
     restart: on-failure:10
     volumes:
       - ./migrator/migrations:/migrations
@@ -70,12 +81,16 @@ services:
 
   consul-agent:
     build: ./infra/consul
+    networks:
+      - gpsnet
     command: "-retry-join consul-server-bootstrap -client 0.0.0.0"
     depends_on:
       - consul-server-bootstrap
 
   consul-server-1: &consul-server
     image: consul:1.7.1
+    networks:
+      - gpsnet
     command: "agent -server -retry-join consul-server-bootstrap -client 0.0.0.0"
 
   consul-server-2:
@@ -83,6 +98,8 @@ services:
 
   consul-server-bootstrap:
     image: consul:1.7.1
+    networks:
+      - gpsnet
     ports:
       - "8400:8400"
       - "8500:8500"
@@ -92,6 +109,8 @@ services:
 
   usermanager:
     image: github.com/lvl484/user-manager
+    networks:
+      - gpsnet
     ports:
       - "8002:8002"
       - "8001:8001"
