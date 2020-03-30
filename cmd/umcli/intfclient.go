@@ -7,6 +7,7 @@ import (
 	"github.com/lvl484/user-manager/model"
 )
 
+// Account interface
 type Account interface {
 	CreateAccount(w http.ResponseWriter, r *http.Request)
 	GetInfoAccount(w http.ResponseWriter, r *http.Request)
@@ -15,6 +16,7 @@ type Account interface {
 	ValidateAccount(w http.ResponseWriter, r *http.Request)
 }
 
+// Users interface
 type Users interface {
 	Add(args ...interface{}) error
 	Update(args ...interface{}) error

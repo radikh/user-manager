@@ -74,7 +74,7 @@ func returnRepo(c *cli.Context) (*usersRepo, error) {
 	return repo, nil
 }
 
-// splitParam split input argument into field name and value
+// splitParam split input argument into field  name and value
 func splitParam(param string) (pName string, pValue string) {
 	params := strings.Split(param, "=")
 	pName = params[0]

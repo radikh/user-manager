@@ -10,7 +10,7 @@ import (
 
 const (
 	nameAPP  = "umcli"
-	usageAPP = "Command line tool to manipulate accounts with admin rights"
+	usageAPP = "Command line tool to manipulate accounts with admin rights "
 )
 
 func main() {

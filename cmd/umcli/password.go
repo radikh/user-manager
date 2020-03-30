@@ -25,7 +25,7 @@ type PasswordConfig struct {
 	keyLen  uint32
 }
 
-// NewPasswordConfig returns config for encode
+// NewPasswordConfig returns config  for encode
 func NewPasswordConfig() *PasswordConfig {
 	return &PasswordConfig{
 		time:    configTime,

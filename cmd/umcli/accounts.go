@@ -15,6 +15,7 @@ type StatusAccount struct {
 	message string
 }
 
+// Response's
 var (
 	StatusInfoOK             = StatusAccount{code: 200, message: "An account info"}
 	StatusCreateOK           = StatusAccount{code: 201, message: "Successfully created"}

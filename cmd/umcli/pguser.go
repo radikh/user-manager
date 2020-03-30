@@ -22,7 +22,7 @@ const (
 
 var ErrUserDisable = errors.New("User is disabled!!!!!")
 
-// usersRepo structure that contain pointer to database
+// usersRepo structure that contain pointer  to database
 type usersRepo struct {
 	db *sql.DB
 }
