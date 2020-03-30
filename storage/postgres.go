@@ -3,18 +3,18 @@
 package storage
 
 import (
+	// _ is used for registering the pq driver as a database driver,
+	// without importing any other functions
 	"database/sql"
 	"fmt"
-	"log"
 
-	// _ mean that we can use all function from this package
 	_ "github.com/lib/pq"
 )
 
 // Config of Postgres DB
 type DBConfig struct {
 	Host     string
-	Port     string
+	Port     int
 	User     string
 	Password string
 	DBName   string
@@ -28,18 +28,14 @@ func ConnectToDB(pg *DBConfig) (*sql.DB, error) {
 
 	database, err := sql.Open("postgres", pgConfig)
 	if err != nil {
-		log.Print("Could not connect to ", pg.DBName)
 		return nil, err
 	}
 
 	err = database.Ping()
 
 	if err != nil {
-		log.Print("Could not connect to ", pg.DBName)
 		return nil, err
 	}
-
-	log.Print("Successfully connected to ", pg.DBName)
 
 	return database, nil
 }

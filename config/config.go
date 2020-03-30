@@ -1,29 +1,19 @@
 // Package config is responsible for loading user-manager application config.
-
+// Basic configuration like consul credentials and address, http port to listen for requests,
+// postgres schema name, credentials, and client timeout are read from environment variables.
 package config
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"strings"
 	"time"
+
+	"github.com/lvl484/user-manager/storage"
+
+	"github.com/lvl484/user-manager/logger"
 
 	consul "github.com/hashicorp/consul/api"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/spf13/viper"
-
-	"github.com/lvl484/user-manager/logger"
-)
-
-const (
-	loggerHost       = "loggerUM.Host"
-	loggerPort       = "loggerUM.Port"
-	loggerPassSecret = "loggerUM.PassSecret"
-	loggerPassSHA2   = "loggerUM.PassSHA2"
-	loggerOutput     = "loggerUM.Output"
-	LoggerLevel      = "loggerUM.Level"
-	LoggerType       = "loggerUM.Type"
 )
 
 // Config model includes all necessary information, which will be read from environment variables
@@ -35,39 +25,18 @@ type Config struct {
 	ConsulAddress string `envconfig:"CONSUL_ADDRESS" required:"true"`
 	ConsulToken   string `envconfig:"CONSUL_TOKEN" required:"true"`
 
-	BindIP       string        `envconfig:"BIND_IP" default:"0.0.0.0"`
-	BindPort     int           `envconfig:"BIND_PORT" default:"8000"`
+	HTTPIP       string        `envconfig:"HTTP_IP" default:"0.0.0.0"`
+	HTTPPort     int           `envconfig:"HTTP_PORT" default:"8000"`
 	ReadTimeout  time.Duration `envconfig:"READ_TIMEOUT" default:"60s"`
 	WriteTimeout time.Duration `envconfig:"WRITE_TIMEOUT" default:"60s"`
 
-	consulClient *consul.Client
-	v            *viper.Viper
-}
+	LoggerPassSecret string `envconfig:"LOGGER_PASS_SECRET"`
+	LoggerPassSHA2   string `envconfig:"LOGGER_PASS_SHA2"`
+	LoggerOutput     string `envconfig:"LOGGER_OUTPUT" default:"Stdout"`
+	LoggerLevel      string `envconfig:"LOGGER_LEVEL" default:"info"`
+	LoggerType       string `envconfig:"LOGGER_TYPE" default:"async"`
 
-func NewViperConfig(configName, configPath string) (*Config, error) {
-	v := viper.New()
-	v.AddConfigPath(configPath)
-	v.SetConfigName(configName)
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
-	if err := v.ReadInConfig(); err != nil {
-		return nil, err
-	}
-
-	return &Config{v: v}, nil
-}
-
-// NewPostgresConfig returns pointer to PointerConfig with data read from viper.config.json
-func (conf *Config) NewLoggerConfig() *logger.LogConfig {
-	return &logger.LogConfig{
-		Host:       conf.v.GetString(loggerHost),
-		Port:       conf.v.GetString(loggerPort),
-		PassSecret: conf.v.GetString(loggerPassSecret),
-		PassSHA2:   conf.v.GetString(loggerPassSHA2),
-		Output:     conf.v.GetString(loggerOutput),
-		Level:      conf.v.GetString(LoggerLevel),
-		Type:       conf.v.GetString(LoggerType),
-	}
+	sd ServiceDiscovery
 }
 
 // NewConfig() create new configuration for application
@@ -86,57 +55,53 @@ func NewConfig() (*Config, error) {
 	}
 
 	// Create new consul client using prepared configuration
-	config.consulClient, err = consul.NewClient(consulConfig)
+	consulClient, err := consul.NewClient(consulConfig)
 	if err != nil {
 		return nil, fmt.Errorf("consul client error %w", err)
 	}
+	config.sd = consulSD{consul: consulClient}
 
 	return &config, nil
 }
 
 // LoggerConfig get configurations for glaylog
-func (c *Config) LoggerConfig(ctx context.Context) (string, error) {
+func (c *Config) LoggerConfig(ctx context.Context) (*logger.LogConfig, error) {
 	const serviceName = "graylog"
-	c.ServerAddress()
-	opts := new(consul.QueryOptions).WithContext(ctx)
 
-	services, _, err := c.consulClient.Catalog().Service(serviceName, "", opts)
+	host, port, err := c.sd.GetService(ctx, serviceName)
 	if err != nil {
-		return "", fmt.Errorf("resolve graylog service error %w", err)
+		return nil, err
 	}
 
-	if len(services) == 0 {
-		return "", errors.New("graylog service not found")
-	}
-
-	host := services[0].Address
-	port := services[0].ServicePort
-
-	return fmt.Sprintf("%s:%d", host, port), nil
+	return &logger.LogConfig{
+		Host:       host,
+		Port:       port,
+		PassSecret: c.LoggerPassSecret,
+		PassSHA2:   c.LoggerPassSHA2,
+		Output:     c.LoggerOutput,
+		Level:      c.LoggerLevel,
+		Type:       c.LoggerType,
+	}, nil
 }
 
 // DBConfig get configuration for Postgres Database
-func (c *Config) DBConfig(ctx context.Context) (string, error) {
+func (c *Config) DBConfig(ctx context.Context) (*storage.DBConfig, error) {
 	const serviceName = "db"
 
-	opts := new(consul.QueryOptions).WithContext(ctx)
-
-	services, _, err := c.consulClient.Catalog().Service(serviceName, "", opts)
+	host, port, err := c.sd.GetService(ctx, serviceName)
 	if err != nil {
-		return "", fmt.Errorf("resolve db service error %w", err)
+		return nil, err
 	}
 
-	if len(services) == 0 {
-		return "", errors.New("db service not found")
-	}
-
-	host := services[0].Address
-	port := services[0].ServicePort
-
-	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		host, port, c.PostgresUser, c.PostgresPass, c.PostgresDB), nil
+	return &storage.DBConfig{
+		Host:     host,
+		Port:     port,
+		User:     c.PostgresUser,
+		Password: c.PostgresPass,
+		DBName:   c.PostgresDB,
+	}, nil
 }
 
 func (c *Config) ServerAddress() string {
-	return fmt.Sprintf("%s:%d", c.BindIP, c.BindPort)
+	return fmt.Sprintf("%s:%d", c.HTTPIP, c.HTTPPort)
 }

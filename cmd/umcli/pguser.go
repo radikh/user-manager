@@ -20,7 +20,7 @@ const (
 	queryCheckLogin = `SELECT count(id) FROM users WHERE user_name=$1`
 )
 
-var ErrUserDisable = errors.New("User is disabled, failed to update")
+var ErrUserDisable = errors.New("User is disabled!!!!!")
 
 // usersRepo structure that contain pointer to database
 type usersRepo struct {
@@ -101,7 +101,7 @@ func (ur *usersRepo) GetInfo(login string) (*model.User, error) {
 	}
 	defer row.Close()
 	for row.Next() {
-		err = row.Scan(usr.ID, usr.Username, usr.Email, usr.FirstName, usr.LastName, usr.Phone)
+		err = row.Scan(&usr.ID, &usr.Username, &usr.Email, &usr.FirstName, &usr.LastName, &usr.Phone)
 		if err != nil {
 			return nil, err
 		}
@@ -113,7 +113,7 @@ func (ur *usersRepo) GetInfo(login string) (*model.User, error) {
 // getUserDeactivated show if user is deactivated
 func (ur *usersRepo) getUserDeactivated(login string) (bool, error) {
 	result := false
-	err := ur.db.QueryRow(queryAlive, login).Scan(result)
+	err := ur.db.QueryRow(queryAlive, login).Scan(&result)
 
 	return result, err
 }
@@ -121,7 +121,7 @@ func (ur *usersRepo) getUserDeactivated(login string) (bool, error) {
 // CheckLoginExist check information about existing user with such login
 func (ur *usersRepo) CheckLoginExist(login string) (bool, error) {
 	result := 0
-	err := ur.db.QueryRow(queryCheckLogin, login).Scan(result)
+	err := ur.db.QueryRow(queryCheckLogin, login).Scan(&result)
 
 	return result == 1, err
 }

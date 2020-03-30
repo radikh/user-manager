@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"os"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/urfave/cli/v2"
 
+	"github.com/lvl484/user-manager/config"
 	"github.com/lvl484/user-manager/model"
 	"github.com/lvl484/user-manager/storage"
 )
@@ -56,23 +58,15 @@ func GetCommands() cli.Commands {
 
 // returnRepo return the repo that holds database
 func returnRepo(c *cli.Context) (*usersRepo, error) {
-	/*	cfg, err := config.NewConfig()
-		if err != nil {
-			return nil, err
-		}
-		dbcfg, err := cfg.DBConfig(context.Background())
-		if err != nil {
-			return nil, err
-		}*/
-	// TODO change according config
-	pgConfig := storage.DBConfig{
-		Host:     "127.0.0.1",
-		Port:     "5432",
-		User:     "postgres",
-		Password: "postgres",
-		DBName:   "um_db",
+	cfg, err := config.NewConfig()
+	if err != nil {
+		return nil, err
 	}
-	db, err := storage.ConnectToDB(&pgConfig)
+	dbcfg, err := cfg.DBConfig(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	db, err := storage.ConnectToDB(dbcfg)
 	if err != nil {
 		return nil, err
 	}
@@ -80,12 +74,17 @@ func returnRepo(c *cli.Context) (*usersRepo, error) {
 	return repo, nil
 }
 
-// appendParam assign value to User structure field by name
-func appendParam(user *model.User, param string) error {
-	var pName, pValue string
+// splitParam split input argument into field name and value
+func splitParam(param string) (pName string, pValue string) {
 	params := strings.Split(param, "=")
 	pName = params[0]
 	pValue = params[1]
+	return pName, pValue
+}
+
+// appendParam assign value to User structure field by name
+func appendParam(user *model.User, param string) error {
+	pName, pValue := splitParam(param)
 	switch pName {
 	case "login":
 		user.Username = pValue
@@ -128,11 +127,12 @@ func CreateAction(c *cli.Context) error {
 func InfoAction(c *cli.Context) error {
 	var user *model.User
 	param := c.Args().Get(0)
+	_, pValue := splitParam(param)
 	repo, err := returnRepo(c)
 	if err != nil {
 		return err
 	}
-	user, err = repo.GetInfo(param)
+	user, err = repo.GetInfo(pValue)
 	if err != nil {
 		return err
 	}
@@ -146,11 +146,12 @@ func InfoAction(c *cli.Context) error {
 // ActivateAction activate user that was disabled
 func ActivateAction(c *cli.Context) error {
 	param := c.Args().Get(0)
+	_, pValue := splitParam(param)
 	repo, err := returnRepo(c)
 	if err != nil {
 		return err
 	}
-	err = repo.Activate(param)
+	err = repo.Activate(pValue)
 	if err != nil {
 		return err
 	}
@@ -164,11 +165,12 @@ func ActivateAction(c *cli.Context) error {
 // DisableAction disable user by its login
 func DisableAction(c *cli.Context) error {
 	param := c.Args().Get(0)
+	_, pValue := splitParam(param)
 	repo, err := returnRepo(c)
 	if err != nil {
 		return err
 	}
-	err = repo.Disable(param)
+	err = repo.Disable(pValue)
 	if err != nil {
 		return err
 	}
@@ -212,11 +214,12 @@ func UpdateAction(c *cli.Context) error {
 // DeleteAction delete user in database
 func DeleteAction(c *cli.Context) error {
 	param := c.Args().Get(0)
+	_, pValue := splitParam(param)
 	repo, err := returnRepo(c)
 	if err != nil {
 		return err
 	}
-	err = repo.Delete(param)
+	err = repo.Delete(pValue)
 	if err != nil {
 		return err
 	}

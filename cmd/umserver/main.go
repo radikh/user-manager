@@ -6,8 +6,8 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,34 +15,13 @@ import (
 	"syscall"
 	"time"
 
-	_ "github.com/lib/pq"
-	"github.com/sirupsen/logrus"
-
 	"github.com/lvl484/user-manager/config"
 	"github.com/lvl484/user-manager/logger"
-	"github.com/lvl484/user-manager/storage"
+
+	_ "github.com/lib/pq"
 )
 
 const gracefulShutdownTimeOut = 10 * time.Second
-
-var configuration *config.Config
-var Log logger.Logger
-
-func init() {
-	var err error
-	configuration, err = config.NewViperConfig("viper.config", "../../config")
-	if err != nil {
-		fmt.Println(err)
-	}
-	loggerConfig := configuration.NewLoggerConfig()
-	logUM := logrus.New()
-	err = logger.ConfigLogger(logUM, loggerConfig)
-	if err != nil {
-		fmt.Println(err)
-	}
-	logger.SetLogger(logUM)
-	Log = logger.LogUM
-}
 
 func main() {
 	var (
@@ -50,17 +29,26 @@ func main() {
 		wg          = new(sync.WaitGroup)
 		closers     []io.Closer
 	)
-	var err error
 
 	cfg, err := config.NewConfig()
 	if err != nil {
-		Log.Fatal(err)
+		log.Fatal(err)
+	}
+
+	loggerConfig, err := cfg.LoggerConfig(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = logger.SetLogger(loggerConfig)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// Example
-	Log.Info(cfg)
-	Log.Info(cfg.LoggerConfig(ctx))
-	Log.Info(cfg.DBConfig(ctx))
+	log.Println(cfg)
+	log.Println(cfg.LoggerConfig(ctx))
+	log.Println(cfg.DBConfig(ctx))
 
 	// TODO: Replace with HTTP server implemented in server package
 	srv := &http.Server{
@@ -68,37 +56,22 @@ func main() {
 		ReadTimeout:  cfg.ReadTimeout,
 		WriteTimeout: cfg.WriteTimeout,
 	}
-	Log.Info("Server start at %s...", srv.Addr)
-	fmt.Println("A am started")
+
 	// Go routine with run HTTP server
 	wg.Add(1)
-
 	go func() {
 		defer wg.Done()
 		defer cancel()
 
 		err := srv.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			Log.Error("%v\n", err)
+			logger.LogUM.Error("%v\n", err)
 		}
 	}()
-	Log.Info("Server Listening at %s...", srv.Addr)
+	logger.LogUM.Info("Server Listening at %s...", srv.Addr)
 
-	// pgConfig will be taken from package config, but it hasn't ready yet
-	pgConfig := storage.DBConfig{
-		Host:     "127.0.0.1",
-		Port:     "5432",
-		User:     "postgres",
-		Password: "postgres",
-		DBName:   "um_db",
-	}
-
-	db, err := storage.ConnectToDB(&pgConfig)
-	if err != nil {
-		Log.Error(err)
-	}
-	defer db.Close()
-
+	// TODO: There will be actual information about PostgreSQL connection in future
+	// ...
 	// TODO: There will be actual information about consul in future
 	// ...
 	// TODO: There will be actual information about kafka in future
@@ -109,20 +82,20 @@ func main() {
 
 	select {
 	case <-interrupt:
-		Log.Info("Pressed Ctrl+C to terminate server...")
+		logger.LogUM.Info("Pressed Ctrl+C to terminate server...")
 		cancel()
 	case <-ctx.Done():
 		code = 1
 	}
 
-	Log.Info("Server is Stopping...")
+	logger.LogUM.Info("Server is Stopping...")
 
 	// Stop application
 	err = gracefulShutdown(gracefulShutdownTimeOut, wg, srv, closers...)
 	if err != nil {
-		Log.Panicf("Server graceful shutdown failed: %v", err)
+		logger.LogUM.Fatalf("Server graceful shutdown failed: %v", err)
 	}
 
-	Log.Info("Server was gracefully stopped!")
+	logger.LogUM.Info("Server was gracefully stopped!")
 	os.Exit(code)
 }
