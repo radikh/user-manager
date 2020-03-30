@@ -2,9 +2,12 @@ package storage
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestConnectToDB(t *testing.T) {
+	assert := assert.New(t)
 	conf := &DBConfig{
 		Host:     "127.0.0.1",
 		Port:     5432,
@@ -47,9 +50,6 @@ func TestConnectToDB(t *testing.T) {
 	for _, test := range tests {
 		_, get := ConnectToDB(test.config)
 
-		if (get != nil) == test.expect {
-			t.Errorf("ConnectToDB(%v) expect %v", test.name, test.expect)
-			return
-		}
+		assert.Equal(get == nil, test.expect)
 	}
 }
