@@ -22,7 +22,7 @@ type User struct {
 	// Obviously last name
 	LastName string `json:"last_name"`
 	// Valid phone
-	Phone int `json:"phone"`
+	Phone string `json:"phone"`
 	// Time when user was created
 	CreatedAt *time.Time `json:"created_at"`
 	// Time of last changes made
