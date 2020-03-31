@@ -7,7 +7,6 @@ import (
 )
 
 func TestConnectToDB(t *testing.T) {
-	assert := assert.New(t)
 	conf := &DBConfig{
 		Host:     "127.0.0.1",
 		Port:     5432,
@@ -50,6 +49,6 @@ func TestConnectToDB(t *testing.T) {
 	for _, test := range tests {
 		_, get := ConnectToDB(test.config)
 
-		assert.Equal(get == nil, test.expect)
+		assert.Equal(t, get == nil, test.expect)
 	}
 }
