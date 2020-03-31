@@ -69,15 +69,6 @@ func main() {
 	}()
 	Log.Info("Server Listening at %s...", srv.Addr)
 
-	// pgConfig will be taken from package config, but it hasn't ready yet
-	pgConfig := storage.DBConfig{
-		Host:     "127.0.0.1",
-		Port:     5432,
-		User:     "postgres",
-		Password: "postgres",
-		DBName:   "um_db",
-	}
-
 	db, err := storage.ConnectToDB(&pgConfig)
 	if err != nil {
 		Log.Error("%v\n", err)
