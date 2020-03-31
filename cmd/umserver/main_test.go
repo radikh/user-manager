@@ -4,25 +4,20 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"os"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/lvl484/user-manager/logger"
 )
 
-type CloserMock struct {
-	name     string
-	expected func() error
-}
+func TestMain(m *testing.M) {
+	logger.SetLogger(&logger.LogConfig{Output: "Stdout", Level: "debug"})
 
-func NewCloserMock(name string, expected func() error) io.Closer {
-	return CloserMock{
-		name:     name,
-		expected: expected,
-	}
-}
+	code := m.Run()
 
-func (cm CloserMock) Close() error {
-	return cm.expected()
+	os.Exit(code)
 }
 
 func TestGracefulShutdown_Success(t *testing.T) {
@@ -84,4 +79,20 @@ func Test_GracefulShutdown_Timeout(t *testing.T) {
 			t.Fatal("want timeout got nil")
 		}
 	})
+}
+
+type CloserMock struct {
+	name     string
+	expected func() error
+}
+
+func NewCloserMock(name string, expected func() error) io.Closer {
+	return CloserMock{
+		name:     name,
+		expected: expected,
+	}
+}
+
+func (cm CloserMock) Close() error {
+	return cm.expected()
 }
