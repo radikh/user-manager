@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -69,19 +70,17 @@ func main() {
 	}()
 	Log.Info("Server Listening at %s...", srv.Addr)
 
-	pgConfig, err := config.DBConfig()
+	dbConfig, err := cfg.DBConfig(ctx)
 	if err != nil {
-		Log.Error("%v\n", err)
+		log.Fatal(err)
+	}
+	db, err := storage.ConnectToDB(dbConfig)
+	if err != nil {
+		logger.LogUM.Error("%v\n", err)
 		return
 	}
 
-	db, err := storage.ConnectToDB(&pgConfig)
-	if err != nil {
-		Log.Error("%v\n", err)
-		return
-	}
-
-	Log.Info("Successfully connected to %s", pgConfig.DBName)
+	logger.LogUM.Info("Successfully connected to %s", dbConfig.DBName)
 
 	closers = append(closers, db)
 
