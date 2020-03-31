@@ -3,9 +3,12 @@
 package storage
 
 import (
+<<<<<<< HEAD
 	"database/sql"
 	"fmt"
 
+=======
+>>>>>>> master
 	// _ is used for registering the pq driver as a database driver,
 	// without importing any other functions
 	_ "github.com/lib/pq"
@@ -19,6 +22,7 @@ type DBConfig struct {
 	Password string
 	DBName   string
 }
+<<<<<<< HEAD
 
 const pgStr = "host=%v port=%v user=%v password=%v dbname=%v sslmode=disable"
 
@@ -39,3 +43,5 @@ func ConnectToDB(pg *DBConfig) (*sql.DB, error) {
 
 	return database, nil
 }
+=======
+>>>>>>> master

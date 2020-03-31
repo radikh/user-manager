@@ -7,20 +7,10 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
-	"strings"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-)
-
-const (
-	loggerHost       = "loggerUM.Host"
-	loggerPort       = "loggerUM.Port"
-	loggerPassSecret = "loggerUM.PassSecret"
-	loggerPassSHA2   = "loggerUM.PassSHA2"
-	loggerOutput     = "loggerUM.Output"
 )
 
 func TestNullFormatterFormat(t *testing.T) {
@@ -76,34 +66,30 @@ func TestNullFormatterFormat(t *testing.T) {
 }
 
 func TestConfigLogger(t *testing.T) {
-	v := viper.New()
-	v.AddConfigPath("../config/testdata/")
-	v.SetConfigName("testvipercfg")
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
-	if err := v.ReadInConfig(); err != nil {
-		t.Error(err)
-	}
 	logger := log.New()
 	conf := &LogConfig{
-		Host:       v.GetString(loggerHost),
-		Port:       v.GetString(loggerPort),
-		PassSecret: v.GetString(loggerPassSecret),
-		PassSHA2:   v.GetString(loggerPassSHA2),
-		Output:     v.GetString(loggerOutput),
+		Host:       "GREYLOGHOST",
+		Port:       77777,
+		PassSecret: "secretpassword",
+		PassSHA2:   "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
+		Output:     "Graylog",
+		Level:      "info",
 	}
 	incorrectConf := &LogConfig{
 		Host:       "locallviv",
-		Port:       "15000",
+		Port:       15000,
 		PassSecret: "root",
 		PassSHA2:   "asdfsdfdsfewffsdvsvdsvfdsvsvsd",
 		Output:     "Greenlog",
+		Level:      "info",
 	}
 	conf_file := &LogConfig{
 		Output: "File",
+		Level:  "info",
 	}
 	conf_stdout := &LogConfig{
 		Output: "Stdout",
+		Level:  "info",
 	}
 
 	tests := []struct {
@@ -124,7 +110,7 @@ func TestConfigLogger(t *testing.T) {
 			lc:      conf_stdout,
 			wantErr: false,
 		}, {
-			name:    "UncorrectConfig",
+			name:    "IncorrectConfig",
 			lc:      incorrectConf,
 			wantErr: true,
 		},
@@ -132,7 +118,7 @@ func TestConfigLogger(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ConfigLogger(logger, tt.lc)
+			err := configLogger(logger, tt.lc)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewLogger() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -142,7 +128,6 @@ func TestConfigLogger(t *testing.T) {
 }
 
 func TestLogConfigSetLoggerToFile(t *testing.T) {
-
 	_, err := os.OpenFile("user_manager_api.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
 
 	if err != nil {
@@ -152,43 +137,31 @@ func TestLogConfigSetLoggerToFile(t *testing.T) {
 
 func TestLogConfigSetLoggerToStdout(t *testing.T) {
 	logger := log.New()
-	conf_file := &LogConfig{
-		Output: "Filename",
-	}
-	conf_stdout := &LogConfig{
-		Output: "Stdout",
-	}
 
-	conf_stdout.setLoggerToStdout(logger)
-	assert.Equal(t, os.Stdout, log.StandardLogger().Out)
-	conf_file.setLoggerToStdout(logger)
-	assert.NotEqual(t, os.Stdout, log.StandardLogger().Out)
+	(&LogConfig{Output: "Filename"}).setLoggerToFile(logger)
+	assert.NotEqual(t, os.Stdout, logger.Out)
 
+	(&LogConfig{Output: "Stdout"}).setLoggerToStdout(logger)
+	assert.Equal(t, os.Stdout, logger.Out)
 }
 
 func TestLogConfigSetLoggerToGraylog(t *testing.T) {
-	v := viper.New()
-	v.AddConfigPath("../config/testdata/")
-	v.SetConfigName("testvipercfg")
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
-	if err := v.ReadInConfig(); err != nil {
-		t.Error(err)
-	}
 	logger := log.New()
 	conf := &LogConfig{
-		Host:       v.GetString(loggerHost),
-		Port:       v.GetString(loggerPort),
-		PassSecret: v.GetString(loggerPassSecret),
-		PassSHA2:   v.GetString(loggerPassSHA2),
-		Output:     v.GetString(loggerOutput),
+		Host:       "GREYLOGHOST",
+		Port:       77777,
+		PassSecret: "secretpassword",
+		PassSHA2:   "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&",
+		Output:     "Graylog",
+		Level:      "info",
 	}
 	incorrectConf := &LogConfig{
 		Host:       "locallviv",
-		Port:       "15000",
+		Port:       15000,
 		PassSecret: "root",
 		PassSHA2:   "asdfsdfdsfewffsdvsvdsvfdsvsvsd",
 		Output:     "Greenlog",
+		Level:      "info",
 	}
 
 	tests := []struct {
@@ -209,7 +182,7 @@ func TestLogConfigSetLoggerToGraylog(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ConfigLogger(logger, tt.lc)
+			err := configLogger(logger, tt.lc)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewLogger() error = %v, wantErr %v", err, tt.wantErr)
 				return
