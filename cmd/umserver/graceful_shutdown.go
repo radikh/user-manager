@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/lvl484/user-manager/logger"
 )
 
 func gracefulShutdown(timeout time.Duration, wg *sync.WaitGroup, srv *http.Server, closers ...io.Closer) error {
@@ -16,13 +18,13 @@ func gracefulShutdown(timeout time.Duration, wg *sync.WaitGroup, srv *http.Serve
 	go func() {
 		err := srv.Shutdown(ctx)
 		if err != nil {
-			Log.Errorf("shutdown error: %w", err)
+			logger.LogUM.Errorf("shutdown error: %w", err)
 		}
 
 		for _, component := range closers {
 			err := component.Close()
 			if err != nil {
-				Log.Errorf("component error: %w", err)
+				logger.LogUM.Errorf("component error: %w", err)
 			}
 		}
 	}()

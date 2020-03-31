@@ -20,7 +20,7 @@ func (NullFormatter) Format(e *logrus.Entry) ([]byte, error) {
 }
 
 // NewLogger initialized logger according to configuration
-func ConfigLogger(log *logrus.Logger, lc *LogConfig) error {
+func configLogger(log *logrus.Logger, lc *LogConfig) error {
 	var err error
 	switch lc.Output {
 	case "Stdout":
@@ -40,6 +40,7 @@ func ConfigLogger(log *logrus.Logger, lc *LogConfig) error {
 		return err
 	}
 	log.SetLevel(lev)
+
 	return err
 }
 
@@ -52,7 +53,7 @@ func (lc *LogConfig) setLoggerToFile(log *logrus.Logger) error {
 }
 
 // setLoggerToStdout initialize logger for writing to stdout
-func (c *LogConfig) setLoggerToStdout(log *logrus.Logger) {
+func (lc *LogConfig) setLoggerToStdout(log *logrus.Logger) {
 	log.SetFormatter(&logrus.JSONFormatter{})
 	log.SetOutput(os.Stdout)
 }
