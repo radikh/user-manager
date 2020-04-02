@@ -22,7 +22,7 @@ type Config struct {
 	PostgresDB   string `envconfig:"POSTGRES_DB" required:"true"`
 
 	ConsulAddress string `envconfig:"CONSUL_ADDRESS" required:"true"`
-	ConsulToken   string `envconfig:"CONSUL_TOKEN" required:"true"`
+	ConsulToken   string `envconfig:"CONSUL_TOKEN"`
 
 	HTTPIP       string        `envconfig:"HTTP_IP" default:"0.0.0.0"`
 	HTTPPort     int           `envconfig:"HTTP_PORT" default:"8000"`
