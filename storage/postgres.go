@@ -11,6 +11,11 @@ import (
 	_ "github.com/lib/pq"
 )
 
+const (
+	pgStr        = "host=%v port=%v user=%v password=%v dbname=%v sslmode=disable"
+	dbDriverName = "postgres"
+)
+
 // Config of Postgres DB
 type DBConfig struct {
 	Host     string
@@ -19,9 +24,6 @@ type DBConfig struct {
 	Password string
 	DBName   string
 }
-
-const pgStr = "host=%v port=%v user=%v password=%v dbname=%v sslmode=disable"
-const dbDriverName = "postgres"
 
 // ConnectToDB make connect to Postgres DB
 func ConnectToDB(pg *DBConfig) (*sql.DB, error) {

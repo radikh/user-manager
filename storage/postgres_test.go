@@ -7,10 +7,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const dbUser = "POSTGRES_USER"
-const dbPassword = "POSTGRES_PASSWORD"
-const db = "POSTGRES_DB"
-const expectedLine = "host=localhost port=5432 user=postgres password=postgres dbname=um_db sslmode=disable"
+const (
+	dbUser       = "POSTGRES_USER"
+	dbPassword   = "POSTGRES_PASSWORD"
+	db           = "POSTGRES_DB"
+	expectedLine = "host=localhost port=5432 user=postgres password=postgres dbname=um_db sslmode=disable"
+)
 
 func TestConnectToDB(t *testing.T) {
 	user, _ := os.LookupEnv(dbUser)

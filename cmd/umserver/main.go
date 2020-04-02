@@ -78,7 +78,6 @@ func main() {
 	}
 
 	db, err := storage.ConnectToDB(dbConfig)
-
 	if err != nil {
 		logger.LogUM.Fatal("DB connection faild %v\n", err)
 	}
