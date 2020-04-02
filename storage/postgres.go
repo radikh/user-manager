@@ -21,19 +21,17 @@ type DBConfig struct {
 }
 
 const pgStr = "host=%v port=%v user=%v password=%v dbname=%v sslmode=disable"
-const DBDriverName = "postgres"
+const dbDriverName = "postgres"
 
-//DB connector
+// ConnectToDB make connect to Postgres DB
 func ConnectToDB(pg *DBConfig) (*sql.DB, error) {
-	pgConfig := GetDBConfigString(pg)
-	database, err := sql.Open(DBDriverName, pgConfig)
-
+	pgConfig := getDBConfigString(pg)
+	database, err := sql.Open(dbDriverName, pgConfig)
 	if err != nil {
 		return nil, err
 	}
 
 	err = database.Ping()
-
 	if err != nil {
 		return nil, err
 	}
@@ -41,6 +39,7 @@ func ConnectToDB(pg *DBConfig) (*sql.DB, error) {
 	return database, nil
 }
 
-func GetDBConfigString(pg *DBConfig) string {
+// getDBConfigString creat connStr for sql.Open
+func getDBConfigString(pg *DBConfig) string {
 	return fmt.Sprintf(pgStr, pg.Host, pg.Port, pg.User, pg.Password, pg.DBName)
 }

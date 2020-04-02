@@ -59,6 +59,7 @@ func NewConfig() (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("consul client error %w", err)
 	}
+
 	config.sd = consulSD{consul: consulClient}
 
 	return &config, nil
