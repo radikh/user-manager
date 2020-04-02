@@ -74,14 +74,13 @@ func main() {
 
 	dbConfig, err := cfg.DBConfig(ctx)
 	if err != nil {
-		log.Fatal(err)
+		logger.LogUM.Fatal("Can not find data for DB configuration %v\n", err)
 	}
 
 	db, err := storage.ConnectToDB(dbConfig)
 
 	if err != nil {
-		logger.LogUM.Error("%v\n", err)
-		return
+		logger.LogUM.Fatal("DB connection faild %v\n", err)
 	}
 
 	logger.LogUM.Infof("Successfully connected to %s", dbConfig.DBName)

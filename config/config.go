@@ -8,9 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/lvl484/user-manager/storage"
-
 	"github.com/lvl484/user-manager/logger"
+	"github.com/lvl484/user-manager/storage"
 
 	consul "github.com/hashicorp/consul/api"
 	"github.com/kelseyhightower/envconfig"
