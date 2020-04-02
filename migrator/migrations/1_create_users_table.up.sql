@@ -7,7 +7,6 @@ CREATE TABLE public.users
     first_name varchar(20) NOT NULL,
     last_name varchar(50) NOT NULL,
     phone varchar(16) NOT NULL,
-    salted boolean NOT NUll DEFAULT "false"
     created_at timestamp NOT NULL,
     updated_at timestamp NULL,
     CONSTRAINT users_pk PRIMARY KEY

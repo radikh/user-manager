@@ -3,8 +3,10 @@ package main
 
 import (
 	"database/sql"
-	"errors"
+	//	"errors"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/google/uuid"
 	"github.com/lvl484/user-manager/model"
@@ -20,7 +22,7 @@ const (
 	queryCheckLogin = `SELECT count(id) FROM users WHERE user_name=$1`
 )
 
-var ErrUserDisable = errors.New("User is disabled!!!!!")
+var errUserDisable = errors.New("User is disabled!")
 
 // usersRepo structure that contain pointer to database
 type usersRepo struct {
@@ -38,6 +40,7 @@ func (ur *usersRepo) Add(user *model.User) error {
 	if err != nil {
 		return err
 	}
+	errors.Wrap
 	ui, err := uuid.NewRandom()
 	if err != nil {
 		return err
@@ -95,7 +98,7 @@ func (ur *usersRepo) GetInfo(login string) (*model.User, error) {
 		return nil, ErrUserDisable
 	}
 	var usr model.User
-	row, err := ur.db.Query(querySelectInfo, login)
+	row, err := ur.db.QueryRow(querySelectInfo, login)
 	if err != nil {
 		return nil, err
 	}
