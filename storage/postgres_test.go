@@ -11,7 +11,8 @@ const (
 	dbUser       = "POSTGRES_USER"
 	dbPassword   = "POSTGRES_PASSWORD"
 	db           = "POSTGRES_DB"
-	expectedLine = "host=localhost port=5432 user=postgres password=postgres dbname=um_db sslmode=disable"
+	expectedLineOk   = "host=localhost port=5432 user=postgres password=postgres dbname=um_db sslmode=disable"
+	expectedLineZero = "host= port=0 user= password= dbname= sslmode=disable"
 )
 
 func TestConnectToDB(t *testing.T) {
@@ -26,41 +27,15 @@ func TestConnectToDB(t *testing.T) {
 		Password: password,
 		DBName:   dbname,
 	}
-	incorrectConf := &DBConfig{
-		Host:     "host",
-		Port:     1111,
-		User:     "user",
-		Password: "pasword",
-		DBName:   "DBName",
-	}
-
+	
 	zeroConf := &DBConfig{}
 
-	tests := []struct {
-		name   string
-		config *DBConfig
-		expect bool
-	}{
-		{
-			name:   "CorrectInput",
-			config: conf,
-			expect: true,
-		},
-		{
-			name:   "IncorrectInput",
-			config: incorrectConf,
-			expect: false,
-		},
-		{
-			name:   "ZeroInput",
-			config: zeroConf,
-			expect: false,
-		},
-	}
-	for _, test := range tests {
-		_, get := ConnectToDB(test.config)
-		assert.Equal(t, get == nil, test.expect)
-	}
+	bd, err := ConnectToDB(conf)
+	assert.NotNil(t, bd)
+	assert.Nil(t, err)
+	bd, err = ConnectToDB(zeroConf)
+	assert.Nil(t, bd)
+	assert.NotNil(t, err)
 }
 
 func TestGetDBConfigString(t *testing.T) {
@@ -72,39 +47,26 @@ func TestGetDBConfigString(t *testing.T) {
 		DBName:   "um_db",
 	}
 
-	incorrectConf := &DBConfig{
-		Host:     "host",
-		Port:     1111,
-		User:     "user",
-		Password: "pasword",
-		DBName:   "DBName",
-	}
-
 	zeroConf := &DBConfig{}
 
 	tests := []struct {
 		name   string
 		config *DBConfig
-		expect bool
+		expect string
 	}{
 		{
 			name:   "CorrectInput",
 			config: conf,
-			expect: true,
-		},
-		{
-			name:   "IncorrectInput",
-			config: incorrectConf,
-			expect: false,
+			expect: expectedLineOk,
 		},
 		{
 			name:   "ZeroInput",
 			config: zeroConf,
-			expect: false,
+			expect: expectedLineZero,
 		},
 	}
 	for _, test := range tests {
 		get := getDBConfigString(test.config)
-		assert.Equal(t, get == expectedLine, test.expect)
+		assert.Equal(t, get, test.expect)
 	}
 }
