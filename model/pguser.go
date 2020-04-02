@@ -40,7 +40,7 @@ func (ur *UsersRepo) Add(user *User) error {
 	if err != nil {
 		return err
 	}
-	errors.Wrap
+
 	ui, err := uuid.NewRandom()
 	if err != nil {
 		return err
@@ -98,18 +98,10 @@ func (ur *UsersRepo) GetInfo(login string) (*User, error) {
 		return nil, errUserDisable
 	}
 	var usr User
-	row, err := ur.db.QueryRow(querySelectInfo, login)
+	err = ur.db.QueryRow(querySelectInfo, login).Scan(&usr.ID, &usr.Username, &usr.Email, &usr.FirstName, &usr.LastName, &usr.Phone)
 	if err != nil {
 		return nil, err
 	}
-	defer row.Close()
-	for row.Next() {
-		err = row.Scan(&usr.ID, &usr.Username, &usr.Email, &usr.FirstName, &usr.LastName, &usr.Phone)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	return &usr, nil
 }
 
