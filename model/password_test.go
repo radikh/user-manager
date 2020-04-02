@@ -1,5 +1,6 @@
-// Command umcli provides admin command line tool to manipulate accounts with admin rights.
-package main
+// Package model provides user-manager specific data structures,
+// which are meant to be used across the whole application.
+package model
 
 import "testing"
 
@@ -14,7 +15,7 @@ func TestComparePassword(t *testing.T) {
 		want    bool
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{pssword1, }
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

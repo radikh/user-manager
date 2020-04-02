@@ -1,5 +1,6 @@
-// Command umcli provides admin command line tool to manipulate accounts with admin rights.
-package main
+// Package model provides user-manager specific data structures,
+// which are meant to be used across the whole application.
+package model
 
 import (
 	"crypto/rand"

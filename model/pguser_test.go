@@ -1,5 +1,6 @@
-// Command umcli provides admin command line tool to manipulate accounts with admin rights.
-package main
+// Package model provides user-manager specific data structures,
+// which are meant to be used across the whole application.
+package model
 
 import (
 	"database/sql/driver"
@@ -9,8 +10,6 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/lvl484/user-manager/model"
 )
 
 func TestNewUsersRepo(t *testing.T) {
@@ -37,7 +36,7 @@ func TestAdd(t *testing.T) {
 		WithArgs("3b60ac82-5e8f-4010-ac99-2344cfa72ce0", "user1", "$argon2id$v=19$m=65536,t=3,p=1$3ep7s6fHN16+6VhygB4KMg$Gb3C1g]", "email1@company.com", "Pedro", "Petrenko", "77777777777", &timestamp).
 		WillReturnResult(driver.RowsAffected(1))
 
-	user := model.User{
+	user := User{
 		ID:        "3b60ac82-5e8f-4010-ac99-2344cfa72ce0",
 		Username:  "user1",
 		Password:  "$argon2id$v=19$m=65536,t=3,p=1$3ep7s6fHN16+6VhygB4KMg$Gb3C1g]",
@@ -64,7 +63,7 @@ func TestUpdate(t *testing.T) {
 		WithArgs("$argon2id$v=19$m=65536,t=3,p=1$3ep7s6fHN16+6VhygB4KMg$Gb3C1g]", "email1@company.com", "Pedro", "Petrenko", "77777777777", &timestamp, "user1").
 		WillReturnResult(driver.RowsAffected(1))
 
-	user := model.User{
+	user := User{
 		ID:        "3b60ac82-5e8f-4010-ac99-2344cfa72ce0",
 		Username:  "user1",
 		Password:  "$argon2id$v=19$m=65536,t=3,p=1$3ep7s6fHN16+6VhygB4KMg$Gb3C1g]",
@@ -153,7 +152,7 @@ func TestGetInfo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when executing GetInfo query", err)
 	}
-	user1 := model.User{
+	user1 := User{
 		ID:        "3b60ac82-5e8f-4010-ac99-2344cfa72ce0",
 		Username:  "user1",
 		Email:     "email1@company.com",
