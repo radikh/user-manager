@@ -1,30 +1,41 @@
 version: '3'
+
+networks:
+  gpsnet:
+    driver: bridge
+
+
 services:
 
   mongo:
     image: mongo:4.1
+    networks:
+      - gpsnet
   
   elasticsearch:
     image:  docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.2
-    restart: on-failure:10
     environment:
       - http.host=0.0.0.0
-      - transport.host=localhost  
+      - transport.host=localhost
       - network.host=0.0.0.0
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
       memlock:
         soft: -1
         hard: -1
-
+    networks:
+      - gpsnet
+  
   graylog:
     image: graylog/graylog:3.2.3
+    networks:
+      - gpsnet
     env_file:
       - .env
     links:
       - mongo
-      - elasticsearch  
-    depends_on: 
+      - elasticsearch
+    depends_on:
       - mongo
       - elasticsearch
     ports:
@@ -39,10 +50,14 @@ services:
       # GELF UDP
       - 12201:12201/udp
   
+     
   db:
-    image: "postgres:12.2"
+    image: postgres:12.2
+    restart: always
+    networks:
+      - gpsnet
     env_file:
-      - ".env"
+      - .env
     volumes:
       - ./db-data:/var/lib/postgresql/data
       - ./migrator/init:/docker-entrypoint-initdb.d/
@@ -50,17 +65,21 @@ services:
       - 5432:5432
 
   migrator:
-    image: "migrate/migrate"
-    restart: on-failure:10
+    image: migrate/migrate
+    networks:
+      - gpsnet
     volumes: 
       - ./migrator/migrations:/migrations
+    
     env_file:
-      - ".env"
+      - .env
     command: ["-path", "./migrations", "-database",  "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB?sslmode=disable", "up"]
     depends_on: 
-      - "db"
+      - db
      
   consul-agent: 
+    networks:
+      - gpsnet
     build: ./infra/consul
     command: "-retry-join consul-server-bootstrap -client 0.0.0.0"
     depends_on:
@@ -68,6 +87,8 @@ services:
 
   consul-server-1: &consul-server
     image: consul:1.7.1
+    networks:
+      - gpsnet
     command: "agent -server -retry-join consul-server-bootstrap -client 0.0.0.0"
 
   consul-server-2:
@@ -75,6 +96,8 @@ services:
 
   consul-server-bootstrap:
     image: consul:1.7.1
+    networks:
+      - gpsnet
     ports:
       - "8400:8400"
       - "8500:8500"
@@ -84,8 +107,10 @@ services:
   
   usermanager:
     image: github.com/lvl484/user-manager
+    networks:
+      - gpsnet
     ports:
-      - "8002:8002"
+      - "8000:8000"
       - "8001:8001"
     env_file:
       - .env
@@ -96,3 +121,5 @@ services:
       - db
       - migrator
       - graylog
+           
+     

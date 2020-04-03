@@ -17,6 +17,7 @@ import (
 
 	"github.com/lvl484/user-manager/config"
 	"github.com/lvl484/user-manager/logger"
+	"github.com/lvl484/user-manager/storage"
 
 	_ "github.com/lib/pq"
 )
@@ -59,6 +60,7 @@ func main() {
 
 	// Go routine with run HTTP server
 	wg.Add(1)
+
 	go func() {
 		defer wg.Done()
 		defer cancel()
@@ -70,8 +72,20 @@ func main() {
 	}()
 	logger.LogUM.Info("Server Listening at %s...", srv.Addr)
 
-	// TODO: There will be actual information about PostgreSQL connection in future
-	// ...
+	dbConfig, err := cfg.DBConfig(ctx)
+	if err != nil {
+		logger.LogUM.Fatal("Can not find data for DB configuration %v\n", err)
+	}
+
+	db, err := storage.ConnectToDB(dbConfig)
+	if err != nil {
+		logger.LogUM.Fatal("DB connection faild %v\n", err)
+	}
+
+	logger.LogUM.Infof("Successfully connected to %s", dbConfig.DBName)
+
+	closers = append(closers, db)
+
 	// TODO: There will be actual information about consul in future
 	// ...
 	// TODO: There will be actual information about kafka in future
