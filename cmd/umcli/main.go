@@ -15,11 +15,11 @@ const (
 
 func main() {
 	app := cli.NewApp()
-
+	app.EnableBashCompletion = true
 	app.Name = nameAPP
 	app.Usage = usageAPP
 
-	app.Commands = GetCommands()
+	app.Commands = umcliCommands
 
 	err := app.Run(os.Args)
 	if err != nil {

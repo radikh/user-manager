@@ -39,30 +39,29 @@ func Test_createSalt(t *testing.T) {
 }
 
 func TestEncodePassword(t *testing.T) {
-	correctPassword := "$argon2id$v=19$m=65536,t=3,p=1$BCDndJ1kUOAAW/mwP7ViOQ$Ig4hpteBW1YM7Lrh3EHkHQ"
+	correctPassword := "$argon2id$v=19$m=65536,t=3,p=1$L/cXOPSeeE9f68JKienFug$t7/BEg7jx2Gjx/OwSFyWgw"
 	c := NewPasswordConfig()
 	passByte := []byte("password")
-	b64Salt := "BCDndJ1kUOAAW/mwP7ViOQ"
+	b64Salt := "L/cXOPSeeE9f68JKienFug"
 
 	salt, err := base64.RawStdEncoding.DecodeString(b64Salt)
 	assert.NoError(t, err)
 	hash := argon2.IDKey(passByte, salt, c.time, c.memory, c.threads, c.keyLen)
 	b64Hash := base64.RawStdEncoding.EncodeToString(hash)
 
+	good := fmt.Sprintf(hashFormat, argon2.Version, c.memory, c.time, c.threads, b64Salt, b64Hash)
+	assert.Equal(t, correctPassword, good)
+
 	saltNew, err := createSalt()
 	assert.NoError(t, err)
 
 	bSalt := base64.RawStdEncoding.EncodeToString(saltNew)
-
-	good := fmt.Sprintf(hashFormat, argon2.Version, c.memory, c.time, c.threads, b64Salt, b64Hash)
-	assert.Equal(t, correctPassword, good)
-
 	wrong := fmt.Sprintf(hashFormat, argon2.Version, c.memory, c.time, c.threads, bSalt, b64Hash)
 	assert.NotEqual(t, correctPassword, wrong)
 }
 
 func TestComparePassword(t *testing.T) {
-	correctPassword := "$argon2id$v=19$m=65536,t=3,p=1$BCDndJ1kUOAAW/mwP7ViOQ$Ig4hpteBW1YM7Lrh3EHkHQ"
+	correctPassword := "$argon2id$v=19$m=65536,t=3,p=1$L/cXOPSeeE9f68JKienFug$t7/BEg7jx2Gjx/OwSFyWgw"
 	passString := "password"
 	passWrong := "wrongPassword"
 
