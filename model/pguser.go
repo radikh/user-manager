@@ -4,25 +4,25 @@ package model
 
 import (
 	"database/sql"
-	//	"errors"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 )
 
 const (
-	queryInsert     = `INSERT INTO users(id, user_name,password,email,first_name, last_name, phone, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`
-	queryUpdate     = `UPDATE users SET (password,email,first_name, last_name, phone, updated_at)=($1,$2,$3,$4,$5,$6) WHERE user_name=$7`
-	queryDelete     = `DELETE FROM users WHERE user_name=$1`
-	queryDisable    = `UPDATE users SET salted=$1 WHERE user_name=$2`
-	querySelectInfo = `SELECT id,user_name,email,first_name, last_name, phone FROM users WHERE user_name=$1`
-	queryAlive      = `SELECT salted FROM users WHERE user_name=$1`
-	queryCheckLogin = `SELECT count(id) FROM users WHERE user_name=$1`
+	queryInsert = `INSERT INTO users(id, user_name,password,email,first_name, 
+		last_name, phone, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`
+	queryUpdate = `UPDATE users SET (password,email,first_name, last_name, phone, 
+		updated_at)=($1,$2,$3,$4,$5,$6) WHERE user_name=$7`
+	queryDelete             = `DELETE FROM users WHERE user_name=$1`
+	queryDisable            = `UPDATE users SET salted=$1 WHERE user_name=$2`
+	querySelectInfo         = `SELECT id,user_name,password,email,first_name, last_name, phone, salted FROM users WHERE user_name=$1`
+	msgUserDisable          = "User is disabled"
+	msgErrorHashingPassword = "Error hashing password"
+	msgErrorGeneratingUUID  = "Error generating new UUID for user"
+	msgUserDidNotExist      = "There is no such user in database"
 )
-
-var errUserDisable = errors.New("User is disabled!")
 
 //UsersRepo structure that contain pointer to database
 type UsersRepo struct {
@@ -38,29 +38,22 @@ func NewUsersRepo(data *sql.DB) *UsersRepo {
 func (ur *UsersRepo) Add(user *User) error {
 	pwd, err := EncodePassword(NewPasswordConfig(), user.Password)
 	if err != nil {
-		return err
+		return errors.Wrap(err, msgErrorHashingPassword)
 	}
 
 	ui, err := uuid.NewRandom()
 	if err != nil {
-		return err
+		return errors.Wrap(err, msgErrorGeneratingUUID)
 	}
-	_, err = ur.db.Query(queryInsert, ui, user.Username, pwd, user.Email, user.FirstName, user.LastName, user.Phone, time.Now())
+	_, err = ur.db.Exec(queryInsert, ui, user.Username, pwd, user.Email, user.FirstName, user.LastName, user.Phone, time.Now())
 	return err
 }
 
 // Update update information about user in database
 func (ur *UsersRepo) Update(user *User) error {
-	salted, err := ur.getUserDeactivated(user.Username)
-	if err != nil {
-		return err
-	}
-	if salted {
-		return errUserDisable
-	}
 	pwd, err := EncodePassword(NewPasswordConfig(), user.Password)
 	if err != nil {
-		return err
+		return errors.Wrap(err, msgErrorHashingPassword)
 	}
 	_, err = ur.db.Exec(queryUpdate, pwd, user.Email, user.FirstName, user.LastName, user.Phone, time.Now(), user.Username)
 
@@ -90,33 +83,20 @@ func (ur *UsersRepo) Activate(login string) error {
 
 // GetInfo get user information from database
 func (ur *UsersRepo) GetInfo(login string) (*User, error) {
-	salted, err := ur.getUserDeactivated(login)
+	var usr User
+	var salted bool
+	err := ur.db.QueryRow(querySelectInfo, login).Scan(&usr.ID, &usr.Username, &usr.Password,
+		&usr.Email, &usr.FirstName, &usr.LastName, &usr.Phone, &salted)
 	if err != nil {
-		return nil, err
+		if err == sql.ErrNoRows {
+			return nil, errors.Wrap(err, msgUserDidNotExist)
+		} else {
+			return nil, err
+		}
 	}
 	if salted {
-		return nil, errUserDisable
+		return nil, errors.New(msgUserDisable)
 	}
-	var usr User
-	err = ur.db.QueryRow(querySelectInfo, login).Scan(&usr.ID, &usr.Username, &usr.Email, &usr.FirstName, &usr.LastName, &usr.Phone)
-	if err != nil {
-		return nil, err
-	}
+
 	return &usr, nil
-}
-
-// getUserDeactivated show if user is deactivated
-func (ur *UsersRepo) getUserDeactivated(login string) (bool, error) {
-	result := false
-	err := ur.db.QueryRow(queryAlive, login).Scan(&result)
-
-	return result, err
-}
-
-// CheckLoginExist check information about existing user with such login
-func (ur *UsersRepo) CheckLoginExist(login string) (bool, error) {
-	result := 0
-	err := ur.db.QueryRow(queryCheckLogin, login).Scan(&result)
-
-	return result == 1, err
 }

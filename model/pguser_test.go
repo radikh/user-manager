@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,6 +32,22 @@ func TestAdd(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 	defer db.Close()
+	conf := NewPasswordConfig()
+	assert.NotNil(t, conf)
+
+	pwd, err := EncodePassword(conf, "password")
+	if err != nil {
+		assert.Error(t, errors.Wrap(err, msgErrorHashingPassword))
+	}
+	assert.NotNil(t, pwd)
+	assert.NoError(t, err)
+
+	ui, err := uuid.NewRandom()
+	if err != nil {
+		assert.Error(t, errors.Wrap(err, msgErrorGeneratingUUID))
+	}
+	assert.NotNil(t, ui)
+	assert.NoError(t, err)
 
 	timestamp := time.Now()
 	mock.ExpectExec(regexp.QuoteMeta(queryInsert)).
@@ -48,7 +66,7 @@ func TestAdd(t *testing.T) {
 	}
 	_, err = db.Exec(queryInsert, user.ID, user.Username, user.Password, user.Email, user.FirstName, user.LastName, user.Phone, user.CreatedAt)
 
-	assert.Equal(t, nil, err)
+	assert.NoError(t, err)
 }
 
 func TestUpdate(t *testing.T) {
@@ -58,24 +76,35 @@ func TestUpdate(t *testing.T) {
 	}
 	defer db.Close()
 
-	timestamp := time.Now()
-	mock.ExpectExec(regexp.QuoteMeta(queryUpdate)).
-		WithArgs("$argon2id$v=19$m=65536,t=3,p=1$3ep7s6fHN16+6VhygB4KMg$Gb3C1g]", "email1@company.com", "Pedro", "Petrenko", "77777777777", &timestamp, "user1").
-		WillReturnResult(driver.RowsAffected(1))
+	conf := NewPasswordConfig()
+	assert.NotNil(t, conf)
 
+	pwd, err := EncodePassword(conf, "password")
+	if err != nil {
+		assert.Error(t, errors.Wrap(err, msgErrorHashingPassword))
+	}
+	assert.NotNil(t, pwd)
+	assert.NoError(t, err)
+
+	timestamp := time.Now()
 	user := User{
 		ID:        "3b60ac82-5e8f-4010-ac99-2344cfa72ce0",
 		Username:  "user1",
-		Password:  "$argon2id$v=19$m=65536,t=3,p=1$3ep7s6fHN16+6VhygB4KMg$Gb3C1g]",
+		Password:  "$argon2id$v=19$m=65536,t=3,p=1$OLBzWepNZEtV3LXyp7SuHQ$tN8Q03tH+lEjUDuxJ1vX+w]",
 		Email:     "email1@company.com",
 		FirstName: "Pedro",
 		LastName:  "Petrenko",
 		Phone:     "77777777777",
 		UpdatedAt: &timestamp,
 	}
+
+	mock.ExpectExec(regexp.QuoteMeta(queryUpdate)).
+		WithArgs("$argon2id$v=19$m=65536,t=3,p=1$OLBzWepNZEtV3LXyp7SuHQ$tN8Q03tH+lEjUDuxJ1vX+w]", "email1@company.com", "Pedro", "Petrenko", "77777777777", &timestamp, "user1").
+		WillReturnResult(driver.RowsAffected(1))
+
 	_, err = db.Exec(queryUpdate, user.Password, user.Email, user.FirstName, user.LastName, user.Phone, user.UpdatedAt, user.Username)
 
-	assert.Equal(t, nil, err)
+	assert.NoError(t, err)
 }
 
 func TestDelete(t *testing.T) {
@@ -91,7 +120,7 @@ func TestDelete(t *testing.T) {
 		WillReturnResult(driver.RowsAffected(1))
 
 	err = userRepo.Delete("user1")
-	assert.Equal(t, nil, err)
+	assert.NoError(t, err)
 }
 
 func TestDisable(t *testing.T) {
@@ -107,7 +136,7 @@ func TestDisable(t *testing.T) {
 		WillReturnResult(driver.RowsAffected(1))
 
 	err = userRepo.Disable("user1")
-	assert.Equal(t, nil, err)
+	assert.NoError(t, err)
 }
 
 func TestActivate(t *testing.T) {
@@ -123,7 +152,7 @@ func TestActivate(t *testing.T) {
 		WillReturnResult(driver.RowsAffected(1))
 
 	err = userRepo.Activate("user1")
-	assert.Equal(t, nil, err)
+	assert.NoError(t, err)
 }
 
 func TestGetInfo(t *testing.T) {
@@ -132,91 +161,40 @@ func TestGetInfo(t *testing.T) {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 	defer db.Close()
+
+	user1 := User{
+		ID:        "3b60ac82-5e8f-4010-ac99-2344cfa72ce0",
+		Username:  "user1",
+		Password:  "$argon2id$v=19$m=65536,t=3,p=1$BCDndJ1kUOAAW/mwP7ViOQ$Ig4hpteBW1YM7Lrh3EHkHQ",
+		Email:     "email1@company.com",
+		FirstName: "Pedro",
+		LastName:  "Petrenko",
+		Phone:     "77777777777",
+	}
+
 	userRepo := NewUsersRepo(db)
 
-	rowsSalted := sqlmock.NewRows([]string{"salted"}).
-		AddRow("false")
-
-	mock.ExpectQuery(regexp.QuoteMeta(queryAlive)).
-		WithArgs("user1").
-		WillReturnRows(rowsSalted)
-
-	rowsInfo := sqlmock.NewRows([]string{"id", "user_name", "email", "first_name", "last_name", "phone"}).
-		AddRow("3b60ac82-5e8f-4010-ac99-2344cfa72ce0", "user1", "email1@company.com", "Pedro", "Petrenko", "77777777777")
+	rowsInfo := sqlmock.NewRows([]string{"id", "user_name", "password", "email", "first_name", "last_name", "phone", "salted"}).
+		AddRow("3b60ac82-5e8f-4010-ac99-2344cfa72ce0", "user1", "$argon2id$v=19$m=65536,t=3,p=1$BCDndJ1kUOAAW/mwP7ViOQ$Ig4hpteBW1YM7Lrh3EHkHQ",
+			"email1@company.com", "Pedro", "Petrenko", "77777777777", "false")
 
 	mock.ExpectQuery(regexp.QuoteMeta(querySelectInfo)).
 		WithArgs("user1").
 		WillReturnRows(rowsInfo)
 
 	user, err := userRepo.GetInfo("user1")
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when executing GetInfo query", err)
-	}
-	user1 := User{
-		ID:        "3b60ac82-5e8f-4010-ac99-2344cfa72ce0",
-		Username:  "user1",
-		Email:     "email1@company.com",
-		FirstName: "Pedro",
-		LastName:  "Petrenko",
-		Phone:     "77777777777",
-	}
+	assert.NoError(t, err)
 	assert.Equal(t, &user1, user)
 
-}
+	rowsDisabled := sqlmock.NewRows([]string{"id", "user_name", "password", "email", "first_name", "last_name", "phone", "salted"}).
+		AddRow("3b60ac82-5e8f-4010-ac99-2344cfa72ce0", "user1", "$argon2id$v=19$m=65536,t=3,p=1$BCDndJ1kUOAAW/mwP7ViOQ$Ig4hpteBW1YM7Lrh3EHkHQ",
+			"email1@company.com", "Pedro", "Petrenko", "77777777777", "true")
 
-func TestGetUserDeactivated(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-	defer db.Close()
-	userRepo := NewUsersRepo(db)
-
-	rows := sqlmock.NewRows([]string{"salted"}).
-		AddRow("false")
-
-	mock.ExpectQuery(regexp.QuoteMeta(queryAlive)).
+	mock.ExpectQuery(regexp.QuoteMeta(querySelectInfo)).
 		WithArgs("user1").
-		WillReturnRows(rows)
+		WillReturnRows(rowsDisabled)
 
-	isAlive, err := userRepo.getUserDeactivated("user1")
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when executing getUserDeactivated query", err)
-	}
-	assert.Equal(t, false, isAlive)
-}
+	_, err = userRepo.GetInfo("user1")
+	assert.Error(t, err)
 
-func TestCheckLoginExist(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-	defer db.Close()
-	userRepo := NewUsersRepo(db)
-
-	rowsExist := sqlmock.NewRows([]string{"count"}).
-		AddRow(1)
-
-	mock.ExpectQuery(regexp.QuoteMeta(queryCheckLogin)).
-		WithArgs("user1").
-		WillReturnRows(rowsExist)
-
-	isExist, err := userRepo.CheckLoginExist("user1")
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when executing CheckLoginExist query", err)
-	}
-	assert.Equal(t, true, isExist)
-
-	rowsNoExist := sqlmock.NewRows([]string{"count"}).
-		AddRow(0)
-
-	mock.ExpectQuery(regexp.QuoteMeta(queryCheckLogin)).
-		WithArgs("user1").
-		WillReturnRows(rowsNoExist)
-
-	isAbsent, err := userRepo.CheckLoginExist("user1")
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when executing CheckLoginExist query", err)
-	}
-	assert.Equal(t, false, isAbsent)
 }

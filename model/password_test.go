@@ -32,8 +32,10 @@ func TestNewPasswordConfig(t *testing.T) {
 }
 
 func Test_createSalt(t *testing.T) {
-	_, err := createSalt()
+	salt, err := createSalt()
 	assert.NoError(t, err)
+	assert.NotNil(t, salt)
+
 }
 
 func TestEncodePassword(t *testing.T) {
@@ -42,11 +44,14 @@ func TestEncodePassword(t *testing.T) {
 	passByte := []byte("password")
 	b64Salt := "BCDndJ1kUOAAW/mwP7ViOQ"
 
-	salt, _ := base64.RawStdEncoding.DecodeString(b64Salt)
+	salt, err := base64.RawStdEncoding.DecodeString(b64Salt)
+	assert.NoError(t, err)
 	hash := argon2.IDKey(passByte, salt, c.time, c.memory, c.threads, c.keyLen)
 	b64Hash := base64.RawStdEncoding.EncodeToString(hash)
 
-	saltNew, _ := createSalt()
+	saltNew, err := createSalt()
+	assert.NoError(t, err)
+
 	bSalt := base64.RawStdEncoding.EncodeToString(saltNew)
 
 	good := fmt.Sprintf(hashFormat, argon2.Version, c.memory, c.time, c.threads, b64Salt, b64Hash)
