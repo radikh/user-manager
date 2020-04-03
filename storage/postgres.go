@@ -3,12 +3,17 @@
 package storage
 
 import (
-	// _ is used for registering the pq driver as a database driver,
-	// without importing any other functions
 	"database/sql"
 	"fmt"
 
+	// _ is used for registering the pq driver as a database driver,
+	// without importing any other functions
 	_ "github.com/lib/pq"
+)
+
+const (
+	pgStr        = "host=%v port=%v user=%v password=%v dbname=%v sslmode=disable"
+	dbDriverName = "postgres"
 )
 
 // Config of Postgres DB
@@ -20,22 +25,23 @@ type DBConfig struct {
 	DBName   string
 }
 
-const pgStr = "host=%v port=%v user=%v password=%v dbname=%v sslmode=disable"
-
-//DB connector
+// ConnectToDB make connect to Postgres DB
 func ConnectToDB(pg *DBConfig) (*sql.DB, error) {
-	pgConfig := fmt.Sprintf(pgStr, pg.Host, pg.Port, pg.User, pg.Password, pg.DBName)
-
-	database, err := sql.Open("postgres", pgConfig)
+	pgConfig := getDBConfigString(pg)
+	database, err := sql.Open(dbDriverName, pgConfig)
 	if err != nil {
 		return nil, err
 	}
 
 	err = database.Ping()
-
 	if err != nil {
 		return nil, err
 	}
 
 	return database, nil
+}
+
+// getDBConfigString creat connStr for sql.Open
+func getDBConfigString(pg *DBConfig) string {
+	return fmt.Sprintf(pgStr, pg.Host, pg.Port, pg.User, pg.Password, pg.DBName)
 }

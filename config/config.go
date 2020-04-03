@@ -8,9 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/lvl484/user-manager/storage"
-
 	"github.com/lvl484/user-manager/logger"
+	"github.com/lvl484/user-manager/storage"
 
 	consul "github.com/hashicorp/consul/api"
 	"github.com/kelseyhightower/envconfig"
@@ -23,7 +22,7 @@ type Config struct {
 	PostgresDB   string `envconfig:"POSTGRES_DB" required:"true"`
 
 	ConsulAddress string `envconfig:"CONSUL_ADDRESS" required:"true"`
-	ConsulToken   string `envconfig:"CONSUL_TOKEN" required:"true"`
+	ConsulToken   string `envconfig:"CONSUL_TOKEN"`
 
 	HTTPIP       string        `envconfig:"HTTP_IP" default:"0.0.0.0"`
 	HTTPPort     int           `envconfig:"HTTP_PORT" default:"8000"`
@@ -59,6 +58,7 @@ func NewConfig() (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("consul client error %w", err)
 	}
+
 	config.sd = consulSD{consul: consulClient}
 
 	return &config, nil

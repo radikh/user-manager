@@ -1,18 +1,19 @@
-version: "3"
+version: '3'
 
 networks:
   gpsnet:
     driver: bridge
 
+
 services:
+
   mongo:
     image: mongo:4.1
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.2
     networks:
       - gpsnet
-    restart: on-failure:10
+  
+  elasticsearch:
+    image:  docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.2
     environment:
       - http.host=0.0.0.0
       - transport.host=localhost
@@ -22,7 +23,9 @@ services:
       memlock:
         soft: -1
         hard: -1
-
+    networks:
+      - gpsnet
+  
   graylog:
     image: graylog/graylog:3.2.3
     networks:
@@ -46,13 +49,15 @@ services:
       - 12201:12201
       # GELF UDP
       - 12201:12201/udp
-
+  
+     
   db:
-    image: "postgres:12.2"
+    image: postgres:12.2
+    restart: always
     networks:
       - gpsnet
     env_file:
-      - ".env"
+      - .env
     volumes:
       - ./db-data:/var/lib/postgresql/data
       - ./migrator/init:/docker-entrypoint-initdb.d/
@@ -60,29 +65,22 @@ services:
       - 5432:5432
 
   migrator:
-    image: "migrate/migrate"
+    image: migrate/migrate
     networks:
       - gpsnet
-    restart: on-failure:10
-    volumes:
+    volumes: 
       - ./migrator/migrations:/migrations
+    
     env_file:
-      - ".env"
-    command:
-      [
-        "-path",
-        "./migrations",
-        "-database",
-        "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB?sslmode=disable",
-        "up",
-      ]
-    depends_on:
-      - "db"
-
-  consul-agent:
-    build: ./infra/consul
+      - .env
+    command: ["-path", "./migrations", "-database",  "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB?sslmode=disable", "up"]
+    depends_on: 
+      - db
+     
+  consul-agent: 
     networks:
       - gpsnet
+    build: ./infra/consul
     command: "-retry-join consul-server-bootstrap -client 0.0.0.0"
     depends_on:
       - consul-server-bootstrap
@@ -106,20 +104,22 @@ services:
       - "8600:8600"
       - "8600:8600/udp"
     command: "agent -server -bootstrap-expect 3 -ui -client 0.0.0.0"
-
+  
   usermanager:
     image: github.com/lvl484/user-manager
     networks:
       - gpsnet
     ports:
-      - "8002:8002"
+      - "8000:8000"
       - "8001:8001"
     env_file:
       - .env
     build:
       dockerfile: Dockerfile
       context: .
-    depends_on:
+    depends_on:  
       - db
       - migrator
       - graylog
+           
+     

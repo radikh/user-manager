@@ -1,4 +1,4 @@
-// Package logger provides implementetion of writing Log messages to Graylog, file, and stdout.
+// Package logger provides implementation of writing Log messages to Graylog, file, and stdout.
 // Supports log levels and destination.
 package logger
 
@@ -15,7 +15,7 @@ var LogUM Logger
 type NullFormatter struct {
 }
 
-// StorageConfig contains fileds used in Connect for DSN
+// StorageConfig contains fields used in Connect for DSN
 type LogConfig struct {
 	Host       string
 	Port       int
@@ -41,7 +41,6 @@ type Logger interface {
 	Debug(args ...interface{})
 }
 
-// SetLogger is the setter for Log variable
 // SetLogger is the setter for Log variable
 func SetLogger(cfg *LogConfig) error {
 	log := logrus.New()
