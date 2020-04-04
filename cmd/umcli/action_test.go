@@ -2,28 +2,70 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"io/ioutil"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/lvl484/user-manager/model"
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli/v2"
+
+	"github.com/lvl484/user-manager/cmd/umcli/mocks"
+	"github.com/lvl484/user-manager/config"
+	"github.com/lvl484/user-manager/model"
+	"github.com/lvl484/user-manager/storage"
 )
 
 func TestReturnRepo(t *testing.T) {
+	var err error
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	c := config.Config{
+		PostgresUser: "postgres",
+		PostgresPass: "1q2w3e4r",
+		PostgresDB:   "um_db",
+	}
+	dbconf := &storage.DBConfig{
+		Host:     "db",
+		Port:     5432,
+		User:     "user",
+		Password: "password",
+		DBName:   "dbname",
+	}
+	mockConf := mocks.NewMockActionChecker(mockCtrl)
+	mockConf.EXPECT().NewConfig().Return(&c, nil)
+	conf, err := mockConf.NewConfig()
+	assert.NoError(t, err)
+	assert.Equal(t, &c, conf)
+
+	mockConf.EXPECT().DBConfig(context.Background()).Return(dbconf, nil)
+	dconf, err := mockConf.DBConfig(context.Background())
+	assert.NoError(t, err)
+	assert.Equal(t, dbconf, dconf)
+
 	db, _, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer db.Close()
-	ur := model.NewUsersRepo(db)
 
-	assert.NotNil(t, ur)
+	repo1 := model.NewUsersRepo(db)
+	mockConf.EXPECT().ConnectToDB(dbconf).Return(db, nil)
+	ddb, err := mockConf.ConnectToDB(dbconf)
+	assert.NoError(t, err)
+	assert.NotNil(t, ddb)
+
+	mockConf.EXPECT().ReturnRepo().Return(repo1, nil)
+	repo, err := mockConf.ReturnRepo()
+	assert.NoError(t, err)
+	assert.NotNil(t, repo)
+
 }
 
 func TestSsplitParam(t *testing.T) {
+	var ah actionHandle
 	type args struct {
 		param string
 	}
@@ -44,7 +86,7 @@ func TestSsplitParam(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotPName, gotPValue, err := splitParam(tt.args.param)
+			gotPName, gotPValue, err := ah.splitParam(tt.args.param)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
@@ -56,6 +98,7 @@ func TestSsplitParam(t *testing.T) {
 }
 
 func TestAppendParam(t *testing.T) {
+	var ah actionHandle
 	user := model.User{
 		ID:        "3b60ac82-5e8f-4010-ac99-2344cfa72ce0",
 		Username:  "user1",
@@ -74,16 +117,17 @@ func TestAppendParam(t *testing.T) {
 		LastName:  "Porotrenko",
 		Phone:     "77777777777",
 	}
-	err := appendParam(&user, "email=boss2@company.com")
+	err := ah.appendParam(&user, "email=boss2@company.com")
 	assert.NoError(t, err)
-	err = appendParam(&user, "lastname=Porotrenko")
+	err = ah.appendParam(&user, "lastname=Porotrenko")
 	assert.NoError(t, err)
 	assert.Equal(t, &user1, &user)
-	err = appendParam(&user, "lastnamePorotrenko")
+	err = ah.appendParam(&user, "lastnamePorotrenko")
 	assert.Error(t, err)
 }
 
 func TestCreateUser(t *testing.T) {
+	var ah actionHandle
 	user := model.User{
 		Username:  "user1",
 		Password:  "password",
@@ -98,13 +142,13 @@ func TestCreateUser(t *testing.T) {
 
 	context := cli.NewContext(app, set, nil)
 
-	user1, err := createUser(context)
-	assert.NoError(t, err)
+	user1, err := ah.createUser(context)
 	assert.Equal(t, &user, user1)
-
+	assert.NoError(t, err)
 }
 
 func TestSplitLogin(t *testing.T) {
+	var ah actionHandle
 	type args struct {
 		msg []string
 	}
@@ -128,7 +172,7 @@ func TestSplitLogin(t *testing.T) {
 
 		context := cli.NewContext(app, set, nil)
 		t.Run(tt.name, func(t *testing.T) {
-			gotPValue, err := splitLogin(context)
+			gotPValue, err := ah.splitLogin(context)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return
@@ -138,7 +182,8 @@ func TestSplitLogin(t *testing.T) {
 	}
 }
 
-func Test_messageCommandDone(t *testing.T) {
+func TestMessageCommandDone(t *testing.T) {
+	var ah actionHandle
 	type args struct {
 		msg string
 	}
@@ -153,138 +198,206 @@ func Test_messageCommandDone(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := messageCommandDone(tt.args.msg)
+			err := ah.MessageCommandDone(tt.args.msg)
 			assert.NoError(t, err)
 		})
 	}
 }
 
 func TestCreateAction(t *testing.T) {
-	type args struct {
-		c *cli.Context
+	var ah actionHandle
+	user := model.User{
+		Username:  "user1",
+		Password:  "password",
+		Email:     "boss@company.com",
+		FirstName: "Petro",
+		LastName:  "Petrenko",
+		Phone:     "7778777778877887",
 	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := CreateAction(tt.args.c); (err != nil) != tt.wantErr {
-				t.Errorf("CreateAction() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+	app := &cli.App{Writer: ioutil.Discard}
+	set := flag.NewFlagSet("test", 0)
+	_ = set.Parse([]string{"login=user1", "pwd=password", "email=boss@company.com", "phone=7778777778877887", "name=Petro", "lastname=Petrenko"})
+
+	context := cli.NewContext(app, set, nil)
+
+	user1, err := ah.createUser(context)
+	assert.Equal(t, &user, user1)
+	assert.NoError(t, err)
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockConf := mocks.NewMockActionChecker(mockCtrl)
+	repo1 := &model.UsersRepo{}
+	mockConf.EXPECT().ReturnRepo().Return(repo1, nil)
+	repo, err := mockConf.ReturnRepo()
+
+	assert.NoError(t, err)
+	assert.Equal(t, repo1, repo)
+
+	modelMock := mocks.NewMockUsers(mockCtrl)
+	modelMock.EXPECT().Add(user).Return(nil)
+	err = modelMock.Add(user)
+	assert.NoError(t, err)
 }
 
 func TestInfoAction(t *testing.T) {
-	type args struct {
-		c *cli.Context
+	userTest := model.User{
+		Username:  "user1",
+		Password:  "password",
+		Email:     "boss@company.com",
+		FirstName: "Petro",
+		LastName:  "Petrenko",
+		Phone:     "7778777778877887",
 	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := InfoAction(tt.args.c); (err != nil) != tt.wantErr {
-				t.Errorf("InfoAction() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+	var ah actionHandle
+	app := &cli.App{Writer: ioutil.Discard}
+	set := flag.NewFlagSet("test", 0)
+	_ = set.Parse([]string{"login=user1"})
+
+	context := cli.NewContext(app, set, nil)
+
+	user1, err := ah.splitLogin(context)
+	assert.Equal(t, "user1", user1)
+	assert.NoError(t, err)
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockConf := mocks.NewMockActionChecker(mockCtrl)
+	repo1 := &model.UsersRepo{}
+	mockConf.EXPECT().ReturnRepo().Return(repo1, nil)
+	repo, err := mockConf.ReturnRepo()
+
+	assert.NoError(t, err)
+	assert.Equal(t, repo1, repo)
+
+	modelMock := mocks.NewMockUsers(mockCtrl)
+	modelMock.EXPECT().GetInfo(user1).Return(&userTest, nil)
+	users, err := modelMock.GetInfo(user1)
+	assert.NoError(t, err)
+	assert.NotNil(t, users)
 }
 
 func TestActivateAction(t *testing.T) {
-	type args struct {
-		c *cli.Context
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := ActivateAction(tt.args.c); (err != nil) != tt.wantErr {
-				t.Errorf("ActivateAction() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+	var ah actionHandle
+	app := &cli.App{Writer: ioutil.Discard}
+	set := flag.NewFlagSet("test", 0)
+	_ = set.Parse([]string{"login=user1"})
+
+	context := cli.NewContext(app, set, nil)
+
+	user1, err := ah.splitLogin(context)
+	assert.Equal(t, "user1", user1)
+	assert.NoError(t, err)
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockConf := mocks.NewMockActionChecker(mockCtrl)
+	repo1 := &model.UsersRepo{}
+	mockConf.EXPECT().ReturnRepo().Return(repo1, nil)
+	repo, err := mockConf.ReturnRepo()
+
+	assert.NoError(t, err)
+	assert.Equal(t, repo1, repo)
+
+	modelMock := mocks.NewMockUsers(mockCtrl)
+	modelMock.EXPECT().Activate(user1).Return(nil)
+	err = modelMock.Activate(user1)
+	assert.NoError(t, err)
 }
 
 func TestDisableAction(t *testing.T) {
+	var ah actionHandle
+	app := &cli.App{Writer: ioutil.Discard}
+	set := flag.NewFlagSet("test", 0)
+	_ = set.Parse([]string{"login=user1"})
 
-}
+	context := cli.NewContext(app, set, nil)
 
-func TestUpdateAction(t *testing.T) {
-	type args struct {
-		c *cli.Context
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := UpdateAction(tt.args.c); (err != nil) != tt.wantErr {
-				t.Errorf("UpdateAction() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+	user1, err := ah.splitLogin(context)
+	assert.Equal(t, "user1", user1)
+	assert.NoError(t, err)
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockConf := mocks.NewMockActionChecker(mockCtrl)
+	repo1 := &model.UsersRepo{}
+	mockConf.EXPECT().ReturnRepo().Return(repo1, nil)
+	repo, err := mockConf.ReturnRepo()
+
+	assert.NoError(t, err)
+	assert.Equal(t, repo1, repo)
+
+	modelMock := mocks.NewMockUsers(mockCtrl)
+	modelMock.EXPECT().Disable(user1).Return(nil)
+	err = modelMock.Disable(user1)
+	assert.NoError(t, err)
 }
 
 func TestDeleteAction(t *testing.T) {
-	type args struct {
-		c *cli.Context
+	var ah actionHandle
+	app := &cli.App{Writer: ioutil.Discard}
+	set := flag.NewFlagSet("test", 0)
+	_ = set.Parse([]string{"login=user1"})
+
+	context := cli.NewContext(app, set, nil)
+
+	user1, err := ah.splitLogin(context)
+	assert.Equal(t, "user1", user1)
+	assert.NoError(t, err)
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockConf := mocks.NewMockActionChecker(mockCtrl)
+	db, _, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := DeleteAction(tt.args.c); (err != nil) != tt.wantErr {
-				t.Errorf("DeleteAction() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+
+	repo1 := model.NewUsersRepo(db)
+	mockConf.EXPECT().ReturnRepo().Return(repo1, nil)
+	repo, err := mockConf.ReturnRepo()
+
+	assert.NoError(t, err)
+	assert.Equal(t, repo1, repo)
+
+	modelMock := mocks.NewMockUsers(mockCtrl)
+	modelMock.EXPECT().Delete(user1).Return(nil)
+	err = modelMock.Delete(user1)
+	assert.NoError(t, err)
 }
 
-func Test_splitLogin(t *testing.T) {
-	type args struct {
-		c *cli.Context
+func TestUpdateAction(t *testing.T) {
+	userTest := model.User{
+		Username:  "user1",
+		Password:  "password",
+		Email:     "boss@company.com",
+		FirstName: "Petro",
+		LastName:  "Petrenko",
+		Phone:     "7778777778877887",
 	}
-	tests := []struct {
-		name    string
-		args    args
-		want    string
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := splitLogin(tt.args.c)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("splitLogin() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("splitLogin() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	var ah actionHandle
+	app := &cli.App{Writer: ioutil.Discard}
+	set := flag.NewFlagSet("test", 0)
+	_ = set.Parse([]string{"login=user1"})
+
+	context := cli.NewContext(app, set, nil)
+
+	user1, err := ah.splitLogin(context)
+	assert.Equal(t, "user1", user1)
+	assert.NoError(t, err)
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+	mockConf := mocks.NewMockActionChecker(mockCtrl)
+	repo1 := &model.UsersRepo{}
+	mockConf.EXPECT().ReturnRepo().Return(repo1, nil)
+	repo, err := mockConf.ReturnRepo()
+
+	assert.NoError(t, err)
+	assert.Equal(t, repo1, repo)
+
+	modelMock := mocks.NewMockUsers(mockCtrl)
+	modelMock.EXPECT().Update(&userTest).Return(nil)
+	err = modelMock.Update(&userTest)
+	assert.NoError(t, err)
 }
