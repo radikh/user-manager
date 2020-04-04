@@ -35,6 +35,6 @@ type Users interface {
 	Delete(login string) error
 	Disable(login string) error
 	Activate(login string) error
-	GetInfo(login string) (*model.User, error)
+	GetInfo(login string) (*User, error)
 	CheckLoginExist(lo string) (bool, error)
 }
