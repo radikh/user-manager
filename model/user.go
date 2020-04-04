@@ -28,3 +28,13 @@ type User struct {
 	// Time of last changes made
 	UpdatedAt *time.Time `json:"updated_at"`
 }
+
+type Users interface {
+	Add(args ...interface{}) error
+	Update(args ...interface{}) error
+	Delete(login string) error
+	Disable(login string) error
+	Activate(login string) error
+	GetInfo(login string) (*model.User, error)
+	CheckLoginExist(lo string) (bool, error)
+}
