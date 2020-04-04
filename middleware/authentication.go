@@ -35,11 +35,15 @@ import (
 
 const messageUnauthorized = "Authenticate failed"
 
-type BasicAuthentication struct {
-	ur *model.UsersRepo
+type UserProvider interface {
+	GetInfo(username string) (*model.User, error)
 }
 
-func NewBasicAuthentication(ur *model.UsersRepo) *BasicAuthentication {
+type BasicAuthentication struct {
+	ur UserProvider
+}
+
+func NewBasicAuthentication(ur UserProvider) *BasicAuthentication {
 	return &BasicAuthentication{ur: ur}
 }
 
@@ -53,7 +57,7 @@ func (a *BasicAuthentication) Middleware(handler http.Handler) http.Handler {
 
 		userFromDB, err := a.ur.GetInfo(user)
 		if err != nil {
-			unauthorized(w)
+			internalServerError(w, err)
 			return
 		}
 
