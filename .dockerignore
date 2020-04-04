@@ -7,3 +7,4 @@ migrator
 *.yaml
 *file
 *.md
+!.env

@@ -15,6 +15,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/lvl484/user-manager/config"
+	"github.com/lvl484/user-manager/logger"
+	"github.com/lvl484/user-manager/storage"
+
 	_ "github.com/lib/pq"
 )
 
@@ -27,24 +31,61 @@ func main() {
 		closers     []io.Closer
 	)
 
+	cfg, err := config.NewConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	loggerConfig, err := cfg.LoggerConfig(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = logger.SetLogger(loggerConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Example
+	log.Println(cfg)
+	log.Println(cfg.LoggerConfig(ctx))
+	log.Println(cfg.DBConfig(ctx))
+
 	// TODO: Replace with HTTP server implemented in server package
-	srv := &http.Server{Addr: ":8099"}
+	srv := &http.Server{
+		Addr:         cfg.ServerAddress(),
+		ReadTimeout:  cfg.ReadTimeout,
+		WriteTimeout: cfg.WriteTimeout,
+	}
 
 	// Go routine with run HTTP server
 	wg.Add(1)
+
 	go func() {
 		defer wg.Done()
 		defer cancel()
 
 		err := srv.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			log.Printf("%v\n", err)
+			logger.LogUM.Error("%v\n", err)
 		}
 	}()
-	log.Printf("Server Listening at %s...", srv.Addr)
+	logger.LogUM.Info("Server Listening at %s...", srv.Addr)
 
-	// TODO: There will be actual information about PostgreSQL connection in future
-	// ...
+	dbConfig, err := cfg.DBConfig(ctx)
+	if err != nil {
+		logger.LogUM.Fatal("Can not find data for DB configuration %v\n", err)
+	}
+
+	db, err := storage.ConnectToDB(dbConfig)
+	if err != nil {
+		logger.LogUM.Fatal("DB connection faild %v\n", err)
+	}
+
+	logger.LogUM.Infof("Successfully connected to %s", dbConfig.DBName)
+
+	closers = append(closers, db)
+
 	// TODO: There will be actual information about consul in future
 	// ...
 	// TODO: There will be actual information about kafka in future
@@ -55,20 +96,20 @@ func main() {
 
 	select {
 	case <-interrupt:
-		log.Print("Pressed Ctrl+C to terminate server...")
+		logger.LogUM.Info("Pressed Ctrl+C to terminate server...")
 		cancel()
 	case <-ctx.Done():
 		code = 1
 	}
 
-	log.Print("Server is Stopping...")
+	logger.LogUM.Info("Server is Stopping...")
 
 	// Stop application
-	err := gracefulShutdown(gracefulShutdownTimeOut, wg, srv, closers...)
+	err = gracefulShutdown(gracefulShutdownTimeOut, wg, srv, closers...)
 	if err != nil {
-		log.Fatalf("Server graceful shutdown failed: %v", err)
+		logger.LogUM.Fatalf("Server graceful shutdown failed: %v", err)
 	}
 
-	log.Println("Server was gracefully stopped!")
+	logger.LogUM.Info("Server was gracefully stopped!")
 	os.Exit(code)
 }
