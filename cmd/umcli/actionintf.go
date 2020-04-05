@@ -16,6 +16,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// ActionChecker auxiliary interface for commands and testing
 type ActionChecker interface {
 	NewConfig() (*config.Config, error)
 	DBConfig(context.Context) (*storage.DBConfig, error)
@@ -23,18 +24,23 @@ type ActionChecker interface {
 	ReturnRepo() (*model.UsersRepo, error)
 	MessageCommandDone(msg string) error
 }
+
+// actionHandle structure that implements ActionChecker interface
 type actionHandle struct {
 	ccfg *config.Config
 }
 
+// NewConfig function that replace config.NewConfig()
 func (ah *actionHandle) NewConfig() (*config.Config, error) {
 	return config.NewConfig()
 }
 
+// DBConfig function that replace config.Config.DBConfig()
 func (ah *actionHandle) DBConfig(ctx context.Context) (*storage.DBConfig, error) {
 	return ah.ccfg.DBConfig(ctx)
 }
 
+// ConnectToDB function that replace storage.ConnectToDB
 func (ah *actionHandle) ConnectToDB(dbconf *storage.DBConfig) (*sql.DB, error) {
 	return storage.ConnectToDB(dbconf)
 }
