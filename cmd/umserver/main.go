@@ -17,6 +17,8 @@ import (
 
 	"github.com/lvl484/user-manager/config"
 	"github.com/lvl484/user-manager/logger"
+	"github.com/lvl484/user-manager/model"
+	"github.com/lvl484/user-manager/server"
 	"github.com/lvl484/user-manager/storage"
 
 	_ "github.com/lib/pq"
@@ -58,20 +60,6 @@ func main() {
 		WriteTimeout: cfg.WriteTimeout,
 	}
 
-	// Go routine with run HTTP server
-	wg.Add(1)
-
-	go func() {
-		defer wg.Done()
-		defer cancel()
-
-		err := srv.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
-			logger.LogUM.Error("%v\n", err)
-		}
-	}()
-	logger.LogUM.Info("Server Listening at %s...", srv.Addr)
-
 	dbConfig, err := cfg.DBConfig(ctx)
 	if err != nil {
 		logger.LogUM.Fatal("Can not find data for DB configuration %v\n", err)
@@ -86,11 +74,21 @@ func main() {
 
 	closers = append(closers, db)
 
-	// TODO: There will be actual information about consul in future
-	// ...
-	// TODO: There will be actual information about kafka in future
+	ur := model.NewUsersRepo(db)
+	h := server.NewHTTP(srv.Addr, ur)
 
-	// Watch errors and os signals
+	// Go routine with run HTTP server
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		defer cancel()
+
+		err := h.Start()
+		if err != nil && err != http.ErrServerClosed {
+			logger.LogUM.Error("%v\n", err)
+		}
+	}()
 	interrupt, code := make(chan os.Signal, 1), 0
 	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
 

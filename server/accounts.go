@@ -23,7 +23,7 @@ const (
 	StatusUnexpectedError    = "Unexpected error"
 )
 
-type ServerRepo model.UsersRepo
+type account model.UsersRepo
 
 // createJSONResponce create a JSON responce
 func createJSONResponce(w http.ResponseWriter, code int, msg string, data interface{}) {
@@ -62,12 +62,12 @@ func decodeUserFromBody(w http.ResponseWriter, r *http.Request) (*model.User, er
 }
 
 // CreateAccount create a new account in database
-func (sr *ServerRepo) CreateAccount(w http.ResponseWriter, r *http.Request) {
+func (a *account) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	user, err := decodeUserFromBody(w, r)
 	if err != nil {
 		return
 	}
-	err = (*model.UsersRepo)(sr).Add(user)
+	err = (*model.UsersRepo)(a).Add(user)
 	if err != nil {
 		createErrorResponce(w, http.StatusBadRequest, StatusBadRequest, err)
 		return
@@ -76,13 +76,13 @@ func (sr *ServerRepo) CreateAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetInfoAccount check if account exist and return info about user
-func (sr *ServerRepo) GetInfoAccount(w http.ResponseWriter, r *http.Request) {
+func (a *account) GetInfoAccount(w http.ResponseWriter, r *http.Request) {
 	user, err := decodeUserFromBody(w, r)
 	if err != nil {
 		return
 	}
 
-	user, err = (*model.UsersRepo)(sr).GetInfo(user.Username)
+	user, err = (*model.UsersRepo)(a).GetInfo(user.Username)
 	if err != nil {
 		createErrorResponce(w, http.StatusBadRequest, StatusBadRequest, err)
 		return
@@ -91,13 +91,13 @@ func (sr *ServerRepo) GetInfoAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateAccount update data of account
-func (sr *ServerRepo) UpdateAccount(w http.ResponseWriter, r *http.Request) {
+func (a *account) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 	user, err := decodeUserFromBody(w, r)
 	if err != nil {
 		return
 	}
 
-	err = (*model.UsersRepo)(sr).Update(user)
+	err = (*model.UsersRepo)(a).Update(user)
 	if err != nil {
 		createErrorResponce(w, http.StatusBadRequest, StatusBadRequest, err)
 		return
@@ -106,13 +106,13 @@ func (sr *ServerRepo) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteAccount deletes account of user in database
-func (sr *ServerRepo) DeleteAccount(w http.ResponseWriter, r *http.Request) {
+func (a *account) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	user, err := decodeUserFromBody(w, r)
 	if err != nil {
 		return
 	}
 
-	err = (*model.UsersRepo)(sr).Delete(user.Username)
+	err = (*model.UsersRepo)(a).Delete(user.Username)
 	if err != nil {
 		createErrorResponce(w, http.StatusBadRequest, StatusBadRequest, err)
 		return
@@ -121,12 +121,12 @@ func (sr *ServerRepo) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 // ValidateAccount check if such account exist, check password and return user's info
-func (sr *ServerRepo) ValidateAccount(w http.ResponseWriter, r *http.Request) {
+func (a *account) ValidateAccount(w http.ResponseWriter, r *http.Request) {
 	user, err := decodeUserFromBody(w, r)
 	if err != nil {
 		return
 	}
-	dbuser, err := (*model.UsersRepo)(sr).GetInfo(user.Username)
+	dbuser, err := (*model.UsersRepo)(a).GetInfo(user.Username)
 	if err != nil {
 		createErrorResponce(w, http.StatusBadRequest, StatusBadRequest, err)
 		return
@@ -142,5 +142,4 @@ func (sr *ServerRepo) ValidateAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	createJSONResponce(w, http.StatusOK, StatusInfoOK, dbuser)
-
 }
