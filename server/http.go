@@ -8,6 +8,7 @@ import (
 
 	"github.com/lvl484/user-manager/logger"
 	"github.com/lvl484/user-manager/middleware"
+	"github.com/lvl484/user-manager/model"
 
 	"github.com/gorilla/mux"
 )
@@ -16,20 +17,21 @@ import (
 type HTTP struct {
 	address string
 	acc     *account
+	ur      *model.UsersRepo
 }
 
 // NewHTTP get address of server and return pointer to newserver
-func NewHTTP(addr string, acc *account) *HTTP {
+func NewHTTP(addr string, ur *model.UsersRepo) *HTTP {
 	return &HTTP{
 		address: addr,
-		acc:     acc,
+		ur:      ur,
 	}
 }
 
 // Start create all routes and starting server
 func (h *HTTP) Start() error {
 	mainRoute := mux.NewRouter()
-	mainRoute.Use(middleware.NewBasicAuthentication(h.acc).Middleware)
+	mainRoute.Use(middleware.NewBasicAuthentication(h.ur).Middleware)
 	mainRoute.HandleFunc("/account", h.acc.CreateAccount).Methods("POST")
 	mainRoute.HandleFunc("/account", h.acc.GetInfoAccount).Methods("GET")
 	mainRoute.HandleFunc("/account", h.acc.UpdateAccount).Methods("PUT")
