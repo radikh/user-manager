@@ -134,6 +134,4 @@ var returnedValue = &model.User{
 	FirstName: "UserF",
 	LastName:  "UserL",
 	Phone:     0671112233,
-	CreatedAt: nil,
-	UpdatedAt: nil,
 }
