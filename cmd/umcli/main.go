@@ -1,11 +1,28 @@
 // Command umcli provides admin command line tool to manipulate accounts with admin rights.
-// CLI tool allows:
-// - create a user
-// - delete a user by login
-// - disable a user by login
-// - get user information by login except of password hash and salt
 package main
 
-func main() {
+import (
+	"log"
+	"os"
 
+	"github.com/urfave/cli/v2"
+)
+
+const (
+	nameAPP  = "umcli"
+	usageAPP = "Command line tool to manipulate accounts with admin rights"
+)
+
+func main() {
+	app := cli.NewApp()
+	app.EnableBashCompletion = true
+	app.Name = nameAPP
+	app.Usage = usageAPP
+
+	app.Commands = umcliCommands
+
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
