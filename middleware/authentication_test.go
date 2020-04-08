@@ -43,7 +43,7 @@ func TestBasicAuthenticationMiddlewareValidPass(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	ba.Middleware(OK).ServeHTTP(w, r)
+	ba.Middleware(wrappedHandler).ServeHTTP(w, r)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 }
@@ -65,7 +65,7 @@ func TestBasicAuthenticationMiddlewareInvalidPass(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	ba.Middleware(OK).ServeHTTP(w, r)
+	ba.Middleware(wrappedHandler).ServeHTTP(w, r)
 
 	checkErrorResponse(t, w, http.StatusUnauthorized)
 }
@@ -87,7 +87,7 @@ func TestBasicAuthenticationMiddlewareError(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	ba.Middleware(OK).ServeHTTP(w, r)
+	ba.Middleware(wrappedHandler).ServeHTTP(w, r)
 
 	checkErrorResponse(t, w, http.StatusInternalServerError)
 }
@@ -105,12 +105,12 @@ func TestBasicAuthenticationMiddlewareResponseInvalid(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	ba.Middleware(OK).ServeHTTP(w, r)
+	ba.Middleware(wrappedHandler).ServeHTTP(w, r)
 
 	checkErrorResponse(t, w, http.StatusUnauthorized)
 }
 
-var OK http.Handler = http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+var wrappedHandler http.Handler = http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 })
 
