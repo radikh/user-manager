@@ -32,7 +32,7 @@ func TestBasicAuthenticationMiddlewareValidPass(t *testing.T) {
 
 	mock := mock.NewMockUserProvider(ctrl)
 
-	mock.EXPECT().GetInfo("i3odja").Return(returnedValue, nil)
+	mock.EXPECT().GetInfo("i3odja").Return(userInfo, nil)
 
 	ba := middleware.NewBasicAuthentication(mock)
 
@@ -54,7 +54,7 @@ func TestBasicAuthenticationMiddlewareInvalidPass(t *testing.T) {
 
 	mock := mock.NewMockUserProvider(ctrl)
 
-	mock.EXPECT().GetInfo("i3odja").Return(returnedValue, nil)
+	mock.EXPECT().GetInfo("i3odja").Return(userInfo, nil)
 
 	ba := middleware.NewBasicAuthentication(mock)
 
@@ -76,7 +76,7 @@ func TestBasicAuthenticationMiddlewareError(t *testing.T) {
 
 	mock := mock.NewMockUserProvider(ctrl)
 
-	mock.EXPECT().GetInfo("i3odja").Return(returnedValue, errors.New("middleware error"))
+	mock.EXPECT().GetInfo("i3odja").Return(userInfo, errors.New("middleware error"))
 
 	ba := middleware.NewBasicAuthentication(mock)
 
@@ -126,7 +126,7 @@ func checkErrorResponse(t *testing.T, w *httptest.ResponseRecorder, expectedCode
 	assert.Equal(t, expectedCode, w.Code)
 }
 
-var returnedValue = &model.User{
+var userInfo = &model.User{
 	ID:        "123e4567-e89b-12d3-a456-426655440000",
 	Username:  "i3odja",
 	Password:  "$argon2id$v=19$m=65536,t=3,p=1$Ga9X4EvymyOzUoz+uVMy6w$y5sQVQ",
