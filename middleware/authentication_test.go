@@ -3,6 +3,7 @@ package middleware_test
 import (
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -27,6 +28,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestBasicAuthenticationMiddlewareValidPass(t *testing.T) {
+	t.Parallel()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -49,6 +51,7 @@ func TestBasicAuthenticationMiddlewareValidPass(t *testing.T) {
 }
 
 func TestBasicAuthenticationMiddlewareInvalidPass(t *testing.T) {
+	t.Parallel()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -67,10 +70,16 @@ func TestBasicAuthenticationMiddlewareInvalidPass(t *testing.T) {
 
 	ba.Middleware(wrappedHandler).ServeHTTP(w, r)
 
-	checkErrorResponse(t, w, http.StatusUnauthorized)
+	expected, err := ioutil.ReadFile("./testdata/response_unauthorized.json")
+	require.NoError(t, err)
+
+	assert.JSONEq(t, string(expected), w.Body.String())
+
+	checkErrorResponse(t, w, http.StatusUnauthorized, expected)
 }
 
 func TestBasicAuthenticationMiddlewareError(t *testing.T) {
+	t.Parallel()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -89,10 +98,16 @@ func TestBasicAuthenticationMiddlewareError(t *testing.T) {
 
 	ba.Middleware(wrappedHandler).ServeHTTP(w, r)
 
-	checkErrorResponse(t, w, http.StatusInternalServerError)
+	expected, err := ioutil.ReadFile("./testdata/response_internal_server_error.json")
+	require.NoError(t, err)
+
+	assert.JSONEq(t, string(expected), w.Body.String())
+
+	checkErrorResponse(t, w, http.StatusInternalServerError, expected)
 }
 
 func TestBasicAuthenticationMiddlewareResponseInvalid(t *testing.T) {
+	t.Parallel()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -107,14 +122,19 @@ func TestBasicAuthenticationMiddlewareResponseInvalid(t *testing.T) {
 
 	ba.Middleware(wrappedHandler).ServeHTTP(w, r)
 
-	checkErrorResponse(t, w, http.StatusUnauthorized)
+	expected, err := ioutil.ReadFile("./testdata/response_unauthorized.json")
+	require.NoError(t, err)
+
+	assert.JSONEq(t, string(expected), w.Body.String())
+
+	checkErrorResponse(t, w, http.StatusUnauthorized, expected)
 }
 
 var wrappedHandler http.Handler = http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 })
 
-func checkErrorResponse(t *testing.T, w *httptest.ResponseRecorder, expectedCode int) {
+func checkErrorResponse(t *testing.T, w *httptest.ResponseRecorder, expectedCode int, expectedMessage []byte) {
 	mError := model.Error{}
 
 	err := json.Unmarshal(w.Body.Bytes(), &mError)
@@ -133,5 +153,5 @@ var userInfo = &model.User{
 	Email:     "qwerty@gmail.com",
 	FirstName: "UserF",
 	LastName:  "UserL",
-	Phone:     0671112233,
+	Phone:     "0671112233",
 }
