@@ -27,5 +27,5 @@ func (s consulSD) GetService(ctx context.Context, name string) (string, int, err
 		return "", 0, fmt.Errorf("%s service not found", name)
 	}
 
-	return services[0].Address, services[0].ServicePort, nil
+	return services[0].ServiceAddress, services[0].ServicePort, nil
 }
