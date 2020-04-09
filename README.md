@@ -36,14 +36,43 @@ docker-compose up -d
 
 #### Admin panel
 
-Service should have admin command line tool to manipulate accounts with admin rights.
-CLI tool should be capable:
+Service have admin command line tool to manipulate accounts with admin rights.
+CLI tool is capable:
 - Create a user
 - Delete a user by login
 - Disable a user by login
 - Get user information by login except of password hash and salt 
 
-CLI tool can be implemented both as a part of the service or as a separate tool.
+CLI tool is implemented both as a part of the service and as a separate tool.  
+
+USAGE:
+-    umcli command [arguments...]
+
+COMMANDS:
+-    create    Create new account in database
+-    delete    Delete account in database
+-    disable   Disable account in database
+-    activate  Activate previously disabled account in database
+-    update    Update account in database
+-    info      Show information about user stored in database
+-    help, h   Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+-    --help, -h  show help (default: false)
+
+Execution of CLI in starting docker container  
+```bash
+docker-compose exec  usermanager sh -c "/opt/services/user-manager/cmd/umcli create login=UserLogin pwd=UserPassword email=UserEmail@company.com phone=7777 name=UserName lastname=UserLastName"
+```
+```bash
+docker-compose exec  usermanager sh -c "/opt/services/user-manager/cmd/umcli update login=UserLogin pwd=UserPassword email=UserEmail@company.com phone=7777 name=UserName lastname=UserLastName"
+```
+```bash
+docker-compose exec  usermanager sh -c "/opt/services/user-manager/cmd/umcli delete login=UserLogin"
+```
+```bash
+docker-compose exec  usermanager sh -c "/opt/services/user-manager/cmd/umcli info login=UserLogin"
+```
 
 #### Start all services
 
