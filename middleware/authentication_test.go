@@ -3,6 +3,7 @@ package middleware_test
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -70,12 +71,7 @@ func TestBasicAuthenticationMiddlewareInvalidPass(t *testing.T) {
 
 	ba.Middleware(wrappedHandler).ServeHTTP(w, r)
 
-	expected, err := ioutil.ReadFile("./testdata/response_unauthorized.json")
-	require.NoError(t, err)
-
-	assert.JSONEq(t, string(expected), w.Body.String())
-
-	checkErrorResponse(t, w, http.StatusUnauthorized, expected)
+	checkErrorResponse(t, w, http.StatusUnauthorized)
 }
 
 func TestBasicAuthenticationMiddlewareError(t *testing.T) {
@@ -85,7 +81,7 @@ func TestBasicAuthenticationMiddlewareError(t *testing.T) {
 
 	mock := mock.NewMockUserProvider(ctrl)
 
-	mock.EXPECT().GetInfo("i3odja").Return(userInfo, errors.New("middleware error"))
+	mock.EXPECT().GetInfo("i3odja").Return(nil, errors.New("middleware error"))
 
 	ba := middleware.NewBasicAuthentication(mock)
 
@@ -98,12 +94,7 @@ func TestBasicAuthenticationMiddlewareError(t *testing.T) {
 
 	ba.Middleware(wrappedHandler).ServeHTTP(w, r)
 
-	expected, err := ioutil.ReadFile("./testdata/response_internal_server_error.json")
-	require.NoError(t, err)
-
-	assert.JSONEq(t, string(expected), w.Body.String())
-
-	checkErrorResponse(t, w, http.StatusInternalServerError, expected)
+	checkErrorResponse(t, w, http.StatusInternalServerError)
 }
 
 func TestBasicAuthenticationMiddlewareResponseInvalid(t *testing.T) {
@@ -122,26 +113,24 @@ func TestBasicAuthenticationMiddlewareResponseInvalid(t *testing.T) {
 
 	ba.Middleware(wrappedHandler).ServeHTTP(w, r)
 
-	expected, err := ioutil.ReadFile("./testdata/response_unauthorized.json")
-	require.NoError(t, err)
-
-	assert.JSONEq(t, string(expected), w.Body.String())
-
-	checkErrorResponse(t, w, http.StatusUnauthorized, expected)
+	checkErrorResponse(t, w, http.StatusUnauthorized)
 }
 
 var wrappedHandler http.Handler = http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 	writer.WriteHeader(http.StatusOK)
 })
 
-func checkErrorResponse(t *testing.T, w *httptest.ResponseRecorder, expectedCode int, expectedMessage []byte) {
+func checkErrorResponse(t *testing.T, w *httptest.ResponseRecorder, expectedCode int) {
 	mError := model.Error{}
 
 	err := json.Unmarshal(w.Body.Bytes(), &mError)
 	require.NoError(t, err)
 
-	assert.NotEmpty(t, mError.Code)
-	assert.NotEmpty(t, mError.Message)
+	filename := fmt.Sprintf("./testdata/response_%d.json", expectedCode)
+	expected, err := ioutil.ReadFile(filename)
+	require.NoError(t, err)
+
+	assert.JSONEq(t, string(expected), w.Body.String())
 
 	assert.Equal(t, expectedCode, w.Code)
 }

@@ -33,7 +33,10 @@ import (
 	"github.com/lvl484/user-manager/model"
 )
 
-const messageUnauthorized = "Authenticate failed"
+const (
+	messageUnauthorized        = "Authenticate failed"
+	messageInternalServerError = "Internal server error"
+)
 
 type UserProvider interface {
 	GetInfo(username string) (*model.User, error)
@@ -100,7 +103,7 @@ func internalServerError(w http.ResponseWriter, err error) {
 
 	internalError := &model.Error{
 		Code:    strconv.Itoa(http.StatusInternalServerError),
-		Message: err.Error(),
+		Message: messageInternalServerError,
 	}
 
 	err = json.NewEncoder(w).Encode(&internalError)
