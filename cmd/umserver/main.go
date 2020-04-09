@@ -53,13 +53,6 @@ func main() {
 	log.Println(cfg.LoggerConfig(ctx))
 	log.Println(cfg.DBConfig(ctx))
 
-	// TODO: Replace with HTTP server implemented in server package
-	srv := &http.Server{
-		Addr:         cfg.ServerAddress(),
-		ReadTimeout:  cfg.ReadTimeout,
-		WriteTimeout: cfg.WriteTimeout,
-	}
-
 	dbConfig, err := cfg.DBConfig(ctx)
 	if err != nil {
 		logger.LogUM.Fatalf("Can not find data for DB configuration %v\n", err)
@@ -75,7 +68,7 @@ func main() {
 	closers = append(closers, db)
 
 	ur := model.NewUsersRepo(db)
-	h := server.NewHTTP(srv.Addr, ur)
+	h := server.NewHTTP(cfg, ur)
 
 	// Go routine with run HTTP server
 	wg.Add(1)
@@ -105,7 +98,7 @@ func main() {
 	logger.LogUM.Info("Server is Stopping...")
 
 	// Stop application
-	err = gracefulShutdown(gracefulShutdownTimeOut, wg, srv, closers...)
+	err = gracefulShutdown(gracefulShutdownTimeOut, wg, h, closers...)
 	if err != nil {
 		logger.LogUM.Fatalf("Server graceful shutdown failed: %v", err)
 	}

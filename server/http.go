@@ -4,8 +4,10 @@
 package server
 
 import (
+	"context"
 	"net/http"
 
+	"github.com/lvl484/user-manager/config"
 	"github.com/lvl484/user-manager/logger"
 	"github.com/lvl484/user-manager/middleware"
 	"github.com/lvl484/user-manager/model"
@@ -15,14 +17,20 @@ import (
 )
 
 type HTTP struct {
-	address string
-	ur      *model.UsersRepo
+	srv *http.Server
+	ur  *model.UsersRepo
 }
 
-func NewHTTP(addr string, ur *model.UsersRepo) *HTTP {
+func NewHTTP(cfg *config.Config, ur *model.UsersRepo) *HTTP {
+	srv := &http.Server{
+		Addr:         cfg.ServerAddress(),
+		ReadTimeout:  cfg.ReadTimeout,
+		WriteTimeout: cfg.WriteTimeout,
+	}
+
 	return &HTTP{
-		address: addr,
-		ur:      ur,
+		srv: srv,
+		ur:  ur,
 	}
 }
 
@@ -38,6 +46,13 @@ func (h *HTTP) Start() error {
 	// TODO: replace it with necessary REST APIs
 	mainRoute.HandleFunc("/uuid", h.UUID).Methods(http.MethodGet)
 
-	logger.LogUM.Infof("Server Listening at %s...", h.address)
-	return http.ListenAndServe(h.address, mainRoute)
+	h.srv.Handler = mainRoute
+
+	logger.LogUM.Infof("Server Listening at %s...", h.srv.Addr)
+	return h.srv.ListenAndServe()
+}
+
+// Stop stops all routes and stopping server
+func (h *HTTP) Stop(ctx context.Context) error {
+	return h.srv.Shutdown(ctx)
 }
