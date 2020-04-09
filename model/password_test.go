@@ -39,7 +39,7 @@ func Test_createSalt(t *testing.T) {
 }
 
 func TestEncodePassword(t *testing.T) {
-	correctPassword := "$argon2id$v=19$m=65536,t=3,p=1$L/cXOPSeeE9f68JKienFug$t7/BEg7jx2Gjx/OwSFyWgw"
+	correctPassword := "$argon2id$v=19$m=65536,t=3,p=1$L/cXOPSeeE9f68JKienFug$52t2o11NiXF/gr0wCF514g"
 	c := NewPasswordConfig()
 	passByte := []byte("ostap")
 	b64Salt := "L/cXOPSeeE9f68JKienFug"
@@ -60,7 +60,6 @@ func TestEncodePassword(t *testing.T) {
 	b64Hash1 := base64.RawStdEncoding.EncodeToString(hash1)
 	wrong := fmt.Sprintf(hashFormat, argon2.Version, c.memory, c.time, c.threads, bSalt, b64Hash1)
 	assert.NotEqual(t, correctPassword, wrong)
-	fmt.Println(wrong)
 }
 
 func TestComparePassword(t *testing.T) {

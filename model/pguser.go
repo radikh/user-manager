@@ -90,9 +90,8 @@ func (ur *UsersRepo) GetInfo(login string) (*User, error) {
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.Wrap(err, msgUserDidNotExist)
-		} else {
-			return nil, err
 		}
+		return nil, err
 	}
 	if salted {
 		return nil, errors.New(msgUserDisable)
