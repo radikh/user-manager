@@ -9,8 +9,8 @@ import (
 
 	"github.com/lvl484/user-manager/config"
 	"github.com/lvl484/user-manager/logger"
-	"github.com/lvl484/user-manager/middleware"
 	"github.com/lvl484/user-manager/model"
+	"github.com/lvl484/user-manager/server/http/middleware"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"

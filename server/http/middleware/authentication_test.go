@@ -10,8 +10,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/lvl484/user-manager/middleware"
 	"github.com/lvl484/user-manager/mock"
+	"github.com/lvl484/user-manager/server/http/middleware"
 
 	gomock "github.com/golang/mock/gomock"
 	"github.com/lvl484/user-manager/logger"

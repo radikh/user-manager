@@ -25,17 +25,11 @@
 package middleware
 
 import (
-	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/lvl484/user-manager/logger"
 	"github.com/lvl484/user-manager/model"
-)
-
-const (
-	messageUnauthorized        = "Authenticate failed"
-	messageInternalServerError = "Internal server error"
+	. "github.com/lvl484/user-manager/server/http"
 )
 
 type UserProvider interface {
@@ -54,24 +48,24 @@ func (a *BasicAuthentication) Middleware(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user, pass, ok := r.BasicAuth()
 		if !ok {
-			unauthorized(w)
+			Unauthorized(w)
 			return
 		}
 
 		userFromDB, err := a.ur.GetInfo(user)
 		if err != nil {
-			internalServerError(w, err)
+			InternalServerError(w, err)
 			return
 		}
 
 		matched, err := model.ComparePassword(pass, userFromDB.Password)
 		if err != nil {
-			internalServerError(w, err)
+			InternalServerError(w, err)
 			return
 		}
 
 		if !matched {
-			unauthorized(w)
+			Unauthorized(w)
 			return
 		}
 
@@ -79,37 +73,4 @@ func (a *BasicAuthentication) Middleware(handler http.Handler) http.Handler {
 
 		handler.ServeHTTP(w, r)
 	})
-}
-
-func unauthorized(w http.ResponseWriter) {
-	w.Header().Set("WWW-Authenticate", `Basic realm="user-manager"`)
-	w.WriteHeader(http.StatusUnauthorized)
-
-	authError := &model.Error{
-		Code:    strconv.Itoa(http.StatusUnauthorized),
-		Message: messageUnauthorized,
-	}
-
-	err := json.NewEncoder(w).Encode(&authError)
-	if err != nil {
-		logger.LogUM.Errorf("Write unauthorized response error: %v", err)
-	}
-
-	logger.LogUM.Info("Authentication failed! Invalid login or password")
-}
-
-func internalServerError(w http.ResponseWriter, err error) {
-	w.WriteHeader(http.StatusInternalServerError)
-
-	internalError := &model.Error{
-		Code:    strconv.Itoa(http.StatusInternalServerError),
-		Message: messageInternalServerError,
-	}
-
-	err = json.NewEncoder(w).Encode(&internalError)
-	if err != nil {
-		logger.LogUM.Errorf("Write internal server response error: %v", err)
-	}
-
-	logger.LogUM.Error("Internal server error")
 }
