@@ -2,8 +2,9 @@
     "services":[
       {
         "name":"db",
+        "address": "db",
         "tags":[
-          "postgres"
+          "db"
         ],
         "port":5432,
         "checks":[
@@ -17,6 +18,7 @@
       },
       {
         "name":"graylog",
+        "address": "graylog",
         "tags":[
           "graylog"
         ],

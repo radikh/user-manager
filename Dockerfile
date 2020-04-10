@@ -1,16 +1,18 @@
+FROM golang:1.13 as modules
+ADD go.mod go.sum /m/
+RUN cd /m && go mod download && mkdir -p /go/pkg/
+
 FROM golang:1.13 as builder
-RUN mkdir -p /go/src/github.com/lvl484
 ENV GO111MODULE on
 ENV CGO_ENABLED 0
-WORKDIR /go/src/github.com/lvl484/user-manager
-COPY go.mod ./
-COPY go.sum ./
-RUN go mod download
+COPY --from=modules /go/pkg/ /go/pkg
+RUN mkdir -p /opt/resource/ 
+WORKDIR /opt/resource/
 COPY . .
-WORKDIR /go/src/github.com/lvl484/user-manager/cmd/umserver
-RUN mkdir -p /opt/services/ && go build -o /opt/services/user-manager
+WORKDIR /opt/resource/cmd/umserver
+RUN go build -o /opt/services/user-manager/cmd/umserver .
 
 FROM alpine:3.7
-COPY --from=builder /opt/services/user-manager /opt/services/user-manager/user-manager
-COPY config/viper.config.json /opt/services/user-manager/config/
-WORKDIR /opt/services/user-manager
+COPY --from=builder /opt/services/user-manager/cmd/umserver /opt/services/user-manager
+RUN chmod +x /opt/services/user-manager
+CMD /opt/services/user-manager
