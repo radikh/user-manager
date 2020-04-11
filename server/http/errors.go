@@ -43,5 +43,5 @@ func InternalServerError(w http.ResponseWriter, err error) {
 		logger.LogUM.Errorf("Write internal server response error: %v", err)
 	}
 
-	logger.LogUM.Errorf("Internal server error: $v", err)
+	logger.LogUM.Errorf("Internal server error: %v", err)
 }
