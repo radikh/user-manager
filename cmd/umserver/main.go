@@ -75,7 +75,7 @@ func main() {
 	closers = append(closers, db)
 
 	ur := model.NewUsersRepo(db)
-	h := server.NewHTTP(srv.Addr, ur)
+	h := server.NewHTTP(cfg, ur)
 
 	// Go routine with run HTTP server
 	wg.Add(1)
