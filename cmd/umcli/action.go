@@ -20,7 +20,7 @@ func CreateAction(c *cli.Context) error {
 	if err != nil {
 		return errors.Wrap(err, msgConverteUser)
 	}
-	repo, err := actionHelper.ReturnRepo()
+	repo, err := actionHelper.UsersRepo()
 	if err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func InfoAction(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	repo, err := actionHelper.ReturnRepo()
+	repo, err := actionHelper.UsersRepo()
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func ActivateAction(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	repo, err := actionHelper.ReturnRepo()
+	repo, err := actionHelper.UsersRepo()
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func DisableAction(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	repo, err := actionHelper.ReturnRepo()
+	repo, err := actionHelper.UsersRepo()
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func UpdateAction(c *cli.Context) error {
 		return errors.Wrap(err, msgConverteUser)
 	}
 
-	repo, err := actionHelper.ReturnRepo()
+	repo, err := actionHelper.UsersRepo()
 	if err != nil {
 		return err
 	}
@@ -110,7 +110,7 @@ func DeleteAction(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	repo, err := actionHelper.ReturnRepo()
+	repo, err := actionHelper.UsersRepo()
 	if err != nil {
 		return err
 	}

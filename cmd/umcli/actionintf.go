@@ -19,10 +19,10 @@ import (
 
 // ActionChecker auxiliary interface for commands and testing
 type ActionChecker interface {
-	NewConfig() (*config.Config, error)
+	Config() (*config.Config, error)
 	DBConfig(context.Context) (*storage.DBConfig, error)
 	ConnectToDB(*storage.DBConfig) (*sql.DB, error)
-	ReturnRepo() (*model.UsersRepo, error)
+	UsersRepo() (*model.UsersRepo, error)
 	MessageCommandDone(msg string) error
 }
 
@@ -32,7 +32,7 @@ type actionHandle struct {
 }
 
 // NewConfig function that replace config.NewConfig()
-func (ah *actionHandle) NewConfig() (*config.Config, error) {
+func (ah *actionHandle) Config() (*config.Config, error) {
 	return config.NewConfig()
 }
 
@@ -47,8 +47,8 @@ func (ah *actionHandle) ConnectToDB(dbconf *storage.DBConfig) (*sql.DB, error) {
 }
 
 // returnRepo return the repo that holds database
-func (ah *actionHandle) ReturnRepo() (*model.UsersRepo, error) {
-	cfg, err := ah.NewConfig()
+func (ah *actionHandle) UsersRepo() (*model.UsersRepo, error) {
+	cfg, err := ah.Config()
 	if err != nil {
 		return nil, errors.Wrap(err, msgErrorReadConfig)
 	}
