@@ -13,5 +13,6 @@ WORKDIR /opt/resource/cmd/umserver
 RUN go build -o /opt/services/user-manager/cmd/umserver .
 
 FROM alpine:3.7
-COPY --from=builder /opt/services/user-manager /opt/services/user-manager
-CMD /opt/services/user-manager/cmd/umserver
+COPY --from=builder /opt/services/user-manager/cmd/umserver /opt/services/user-manager
+RUN chmod +x /opt/services/user-manager
+CMD /opt/services/user-manager
