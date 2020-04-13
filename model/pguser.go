@@ -2,9 +2,6 @@
 // which are meant to be used across the whole application.
 package model
 
-<<<<<<< HEAD
-import "database/sql"
-=======
 import (
 	"database/sql"
 	"time"
@@ -26,7 +23,6 @@ const (
 	msgErrorGeneratingUUID  = "Error generating new UUID for user"
 	msgUserDidNotExist      = "There is no such user in database"
 )
->>>>>>> master
 
 //UsersRepo structure that contain pointer to database
 type UsersRepo struct {
@@ -37,8 +33,6 @@ type UsersRepo struct {
 func NewUsersRepo(data *sql.DB) *UsersRepo {
 	return &UsersRepo{db: data}
 }
-<<<<<<< HEAD
-=======
 
 // Add adds new user to database
 func (ur *UsersRepo) Add(user *User) error {
@@ -105,4 +99,3 @@ func (ur *UsersRepo) GetInfo(login string) (*User, error) {
 
 	return &usr, nil
 }
->>>>>>> master
