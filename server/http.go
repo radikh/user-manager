@@ -9,10 +9,9 @@ import (
 
 	"github.com/lvl484/user-manager/config"
 	"github.com/lvl484/user-manager/logger"
-	"github.com/lvl484/user-manager/server/http/middleware"
 	"github.com/lvl484/user-manager/model"
+	"github.com/lvl484/user-manager/server/http/middleware"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -50,12 +49,6 @@ func (h *HTTP) NewRouter() *mux.Router {
 	auth.HandleFunc("/validate", h.acc.ValidateAccount).Methods(http.MethodGet)
 
 	return mainRoute
-	}
-}
-
-// TODO: this method is using only for testing work
-func (h *HTTP) UUID(w http.ResponseWriter, r *http.Request) {
-	_, _ = w.Write([]byte(uuid.New().String()))
 }
 
 // Start create all routes and starting server
