@@ -4,19 +4,19 @@ import (
 	"context"
 	"errors"
 	"io"
-	"net/http"
 	"sync"
 	"time"
 
 	"github.com/lvl484/user-manager/logger"
+	"github.com/lvl484/user-manager/server"
 )
 
-func gracefulShutdown(timeout time.Duration, wg *sync.WaitGroup, srv *http.Server, closers ...io.Closer) error {
+func gracefulShutdown(timeout time.Duration, wg *sync.WaitGroup, srv *server.HTTP, closers ...io.Closer) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 
 	// Shutdown HTTP server
 	go func() {
-		err := srv.Shutdown(ctx)
+		err := srv.Stop(ctx)
 		if err != nil {
 			logger.LogUM.Errorf("shutdown error: %w", err)
 		}
