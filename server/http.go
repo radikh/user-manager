@@ -41,7 +41,7 @@ func (h *HTTP) NewRouter() *mux.Router {
 	withoutAuth := mainRoute.PathPrefix("/account")
 	withoutAuth.HandlerFunc(h.acc.CreateAccount).Methods(http.MethodPost)
 
-	auth := mainRoute.PathPrefix("um").Subrouter()
+	auth := mainRoute.PathPrefix("/um").Subrouter()
 	auth.Use(middleware.NewBasicAuthentication(h.ur).Middleware)
 	auth.HandleFunc("/account", h.acc.GetInfoAccount).Methods(http.MethodGet)
 	auth.HandleFunc("/account", h.acc.UpdateAccount).Methods(http.MethodPut)

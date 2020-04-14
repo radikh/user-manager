@@ -24,9 +24,9 @@ type User struct {
 	// Valid phone
 	Phone string `json:"phone"`
 	// Time when user was created
-	CreatedAt *time.Time `json:"created_at"`
+	CreatedAt *time.Time `json:"-"`
 	// Time of last changes made
-	UpdatedAt *time.Time `json:"updated_at"`
+	UpdatedAt *time.Time `json:"-"`
 }
 
 type Users interface {

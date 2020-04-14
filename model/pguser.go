@@ -45,6 +45,7 @@ func (ur *UsersRepo) Add(user *User) error {
 	if err != nil {
 		return errors.Wrap(err, msgErrorGeneratingUUID)
 	}
+	user.ID = ui.String()
 	_, err = ur.db.Exec(queryInsert, ui, user.Username, pwd, user.Email, user.FirstName, user.LastName, user.Phone, time.Now())
 	return err
 }
