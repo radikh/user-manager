@@ -17,6 +17,8 @@ import (
 
 	"github.com/lvl484/user-manager/config"
 	"github.com/lvl484/user-manager/logger"
+	"github.com/lvl484/user-manager/model"
+	"github.com/lvl484/user-manager/server"
 	"github.com/lvl484/user-manager/storage"
 
 	_ "github.com/lib/pq"
@@ -51,12 +53,22 @@ func main() {
 	log.Println(cfg.LoggerConfig(ctx))
 	log.Println(cfg.DBConfig(ctx))
 
-	// TODO: Replace with HTTP server implemented in server package
-	srv := &http.Server{
-		Addr:         cfg.ServerAddress(),
-		ReadTimeout:  cfg.ReadTimeout,
-		WriteTimeout: cfg.WriteTimeout,
+	dbConfig, err := cfg.DBConfig(ctx)
+	if err != nil {
+		logger.LogUM.Fatalf("Can not find data for DB configuration %v\n", err)
 	}
+
+	db, err := storage.ConnectToDB(dbConfig)
+	if err != nil {
+		logger.LogUM.Fatalf("DB connection failed %v\n", err)
+	}
+
+	logger.LogUM.Infof("Successfully connected to %s", dbConfig.DBName)
+
+	closers = append(closers, db)
+
+	ur := model.NewUsersRepo(db)
+	h := server.NewHTTP(cfg, ur)
 
 	// Go routine with run HTTP server
 	wg.Add(1)
@@ -65,30 +77,11 @@ func main() {
 		defer wg.Done()
 		defer cancel()
 
-		err := srv.ListenAndServe()
+		err := h.Start()
 		if err != nil && err != http.ErrServerClosed {
 			logger.LogUM.Error("%v\n", err)
 		}
 	}()
-	logger.LogUM.Info("Server Listening at %s...", srv.Addr)
-
-	dbConfig, err := cfg.DBConfig(ctx)
-	if err != nil {
-		logger.LogUM.Fatal("Can not find data for DB configuration %v\n", err)
-	}
-
-	db, err := storage.ConnectToDB(dbConfig)
-	if err != nil {
-		logger.LogUM.Fatal("DB connection faild %v\n", err)
-	}
-
-	logger.LogUM.Infof("Successfully connected to %s", dbConfig.DBName)
-
-	closers = append(closers, db)
-
-	// TODO: There will be actual information about consul in future
-	// ...
-	// TODO: There will be actual information about kafka in future
 
 	// Watch errors and os signals
 	interrupt, code := make(chan os.Signal, 1), 0
@@ -105,7 +98,7 @@ func main() {
 	logger.LogUM.Info("Server is Stopping...")
 
 	// Stop application
-	err = gracefulShutdown(gracefulShutdownTimeOut, wg, srv, closers...)
+	err = gracefulShutdown(gracefulShutdownTimeOut, wg, h, closers...)
 	if err != nil {
 		logger.LogUM.Fatalf("Server graceful shutdown failed: %v", err)
 	}
