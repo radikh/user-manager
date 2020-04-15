@@ -2,7 +2,7 @@
 // Source: actionintf.go
 
 // Package mocks is a generated GoMock package.
-package mock
+package main
 
 import (
 	context "context"
@@ -13,6 +13,8 @@ import (
 	config "github.com/lvl484/user-manager/config"
 	model "github.com/lvl484/user-manager/model"
 	storage "github.com/lvl484/user-manager/storage"
+
+	cli "github.com/urfave/cli/v2"
 )
 
 // MockActionChecker is a mock of ActionChecker interface
@@ -38,21 +40,24 @@ func (m *MockActionChecker) EXPECT() *MockActionCheckerMockRecorder {
 	return m.recorder
 }
 
-// NewConfig mocks base method
+// Config mocks base method
 func (m *MockActionChecker) Config() (*config.Config, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Config")
 	ret0, _ := ret[0].(*config.Config)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// NewConfig indicates an expected call of NewConfig
+// Config indicates an expected call of Config
 func (mr *MockActionCheckerMockRecorder) Config() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Config", reflect.TypeOf((*MockActionChecker)(nil).Config))
 }
 
 // DBConfig mocks base method
 func (m *MockActionChecker) DBConfig(arg0 context.Context) (*storage.DBConfig, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DBConfig", arg0)
 	ret0, _ := ret[0].(*storage.DBConfig)
 	ret1, _ := ret[1].(error)
@@ -61,11 +66,13 @@ func (m *MockActionChecker) DBConfig(arg0 context.Context) (*storage.DBConfig, e
 
 // DBConfig indicates an expected call of DBConfig
 func (mr *MockActionCheckerMockRecorder) DBConfig(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DBConfig", reflect.TypeOf((*MockActionChecker)(nil).DBConfig), arg0)
 }
 
 // ConnectToDB mocks base method
 func (m *MockActionChecker) ConnectToDB(arg0 *storage.DBConfig) (*sql.DB, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ConnectToDB", arg0)
 	ret0, _ := ret[0].(*sql.DB)
 	ret1, _ := ret[1].(error)
@@ -74,30 +81,49 @@ func (m *MockActionChecker) ConnectToDB(arg0 *storage.DBConfig) (*sql.DB, error)
 
 // ConnectToDB indicates an expected call of ConnectToDB
 func (mr *MockActionCheckerMockRecorder) ConnectToDB(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ConnectToDB", reflect.TypeOf((*MockActionChecker)(nil).ConnectToDB), arg0)
 }
 
-// returnRepo mocks base method
+// UsersRepo mocks base method
 func (m *MockActionChecker) UsersRepo() (*model.UsersRepo, error) {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UsersRepo")
 	ret0, _ := ret[0].(*model.UsersRepo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// returnRepo indicates an expected call of returnRepo
+// UsersRepo indicates an expected call of UsersRepo
 func (mr *MockActionCheckerMockRecorder) UsersRepo() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UsersRepo", reflect.TypeOf((*MockActionChecker)(nil).UsersRepo))
 }
 
-// messageCommandDone mocks base method
+// MessageCommandDone mocks base method
 func (m *MockActionChecker) MessageCommandDone(msg string) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MessageCommandDone", msg)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// messageCommandDone indicates an expected call of messageCommandDone
+// MessageCommandDone indicates an expected call of MessageCommandDone
 func (mr *MockActionCheckerMockRecorder) MessageCommandDone(msg interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MessageCommandDone", reflect.TypeOf((*MockActionChecker)(nil).MessageCommandDone), msg)
+}
+
+// ExecuteAction mocks base method
+func (m *MockActionChecker) ExecuteAction(c *cli.Context, action int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ExecuteAction", c, action)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ExecuteAction indicates an expected call of ExecuteAction
+func (mr *MockActionCheckerMockRecorder) ExecuteAction(c, action interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecuteAction", reflect.TypeOf((*MockActionChecker)(nil).ExecuteAction), c, action)
 }

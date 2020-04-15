@@ -19,6 +19,7 @@ const (
 	msgUserActivated       = "User activated successfully"
 	msgUserDeleted         = "User deleted successfully"
 	msgUserDisable         = "User disabled successfully"
+	msgErrorActionInput    = "No such command for execute"
 
 	msgCreate   = "Creating user "
 	msgUpdate   = "Updating user "
@@ -27,7 +28,16 @@ const (
 	msgDisable  = "Disabling user "
 	msgActivate = "Activating user "
 
-	msgFormat = "%s <<%s>>"
+	msgFormat = "%s <<%v>>"
+)
+
+const (
+	actionCreate = iota
+	actionUpdate
+	actionInfo
+	actionDelete
+	actionActivate
+	actionDisable
 )
 
 var convertFieldName = func() map[string]string {

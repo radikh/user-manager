@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/DATA-DOG/go-sqlmock v1.4.1
 	github.com/golang/mock v1.4.3
-	github.com/google/uuid v1.1.1 // indirect
+	github.com/google/uuid v1.1.1
 	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/hashicorp/consul v1.7.2 // indirect
 	github.com/hashicorp/consul/api v1.4.0
@@ -18,5 +18,6 @@ require (
 	github.com/sirupsen/logrus v1.5.0
 	github.com/stretchr/testify v1.5.1
 	github.com/urfave/cli/v2 v2.2.0
+	golang.org/x/crypto v0.0.0-20191106202628-ed6320f186d4
 	gopkg.in/gemnasium/logrus-graylog-hook.v2 v2.0.7
 )

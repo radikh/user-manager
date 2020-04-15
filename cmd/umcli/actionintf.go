@@ -24,6 +24,7 @@ type ActionChecker interface {
 	ConnectToDB(*storage.DBConfig) (*sql.DB, error)
 	UsersRepo() (*model.UsersRepo, error)
 	MessageCommandDone(msg string) error
+	ExecuteAction(c *cli.Context, action int) error
 }
 
 // actionHandle structure that implements ActionChecker interface
@@ -61,7 +62,6 @@ func (ah *actionHandle) UsersRepo() (*model.UsersRepo, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, msgErrorDBConfig)
 	}
-
 	err = logger.SetLogger(loggerConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, msgErrorDBConfig)
@@ -87,18 +87,15 @@ func (ah *actionHandle) splitParam(param string) (pName string, pValue string, e
 
 // appendParam assign value to User structure field by name
 func (ah *actionHandle) appendParam(user *model.User, param string) error {
-
 	pName, pValue, err := ah.splitParam(param)
 	if err != nil {
 		return err
 	}
 	pField := reflect.ValueOf(user).Elem().FieldByName(convertFieldName()[pName])
-
 	if !pField.CanSet() {
 		return errors.New(fmt.Sprintf("%s : %s\n", msgConnvertParam, pName))
 	}
 	reflect.ValueOf(user).Elem().FieldByName(convertFieldName()[pName]).SetString(pValue)
-
 	return nil
 }
 
@@ -136,8 +133,12 @@ func (ah *actionHandle) splitLogin(c *cli.Context) (string, error) {
 }
 
 // messageWorkDone messages that command is done
-func (ah *actionHandle) MessageCommandDone(msg string) error {
-	_, err := os.Stdout.WriteString(msg)
+func (ah *actionHandle) MessageCommandDone(msg string, err error) error {
+	if err != nil {
+		_, err = os.Stdout.WriteString(fmt.Sprintf("%s exit with an error: %s\n", msg, err.Error()))
+	} else {
+		_, err = os.Stdout.WriteString(msg)
+	}
 	return err
 }
 
@@ -155,4 +156,57 @@ func (ah *actionHandle) logAction(msg string, err error) {
 // SetConfiguration set configuration to handle that manipulate commands
 func (ah *actionHandle) SetConfiguration(cfg *config.Config) *actionHandle {
 	return &actionHandle{ccfg: cfg}
+}
+
+// ExecuteAction execute prepare and     command
+func (ah *actionHandle) ExecuteAction(c *cli.Context, action int) error {
+	var argumentValue interface{}
+	returnMessage := msgErrorActionInput
+	logMessage := msgErrorActionInput
+	repo, err := actionHelper.UsersRepo()
+	if err != nil {
+		return errors.Wrap(err, msgErrorConnectDB)
+	}
+
+	if action > 1 {
+		argumentValue, err = ah.splitLogin(c)
+	} else {
+		argumentValue, err = actionHelper.createUser(c)
+	}
+	if err != nil {
+		return errors.Wrap(err, msgConverteUser)
+	}
+	switch action {
+	case actionCreate:
+		logMessage = msgCreate
+		user := argumentValue.(*model.User)
+		err = repo.Add(user)
+		returnMessage = fmt.Sprintf("%s was created", user.Username)
+	case actionUpdate:
+		logMessage = msgUpdate
+		user := argumentValue.(*model.User)
+		err = repo.Update(user)
+		returnMessage = fmt.Sprintf("%s was updated", user.Username)
+	case actionInfo:
+		var user *model.User
+		logMessage = msgGetInfo
+		user, err = repo.GetInfo(argumentValue.(string))
+		returnMessage = fmt.Sprintf("%+v", user)
+	case actionDelete:
+		logMessage = msgDelete
+		returnMessage = msgUserDeleted
+		err = repo.Delete(argumentValue.(string))
+	case actionActivate:
+		logMessage = msgActivate
+		returnMessage = msgUserActivated
+		err = repo.Activate(argumentValue.(string))
+	case actionDisable:
+		logMessage = msgDisable
+		returnMessage = msgUserDisable
+		err = repo.Disable(argumentValue.(string))
+	default:
+		err = errors.New(msgErrorActionInput)
+	}
+	actionHelper.logAction(fmt.Sprintf(msgFormat, logMessage, returnMessage), err)
+	return actionHelper.MessageCommandDone(returnMessage, err)
 }

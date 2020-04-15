@@ -22,9 +22,19 @@ type User struct {
 	// Obviously last name
 	LastName string `json:"last_name"`
 	// Valid phone
-	Phone int `json:"phone"`
+	Phone string `json:"phone"`
 	// Time when user was created
 	CreatedAt *time.Time `json:"created_at"`
 	// Time of last changes made
 	UpdatedAt *time.Time `json:"updated_at"`
+}
+
+type Users interface {
+	Add(args ...interface{}) error
+	Update(args ...interface{}) error
+	Delete(login string) error
+	Disable(login string) error
+	Activate(login string) error
+	GetInfo(login string) (*User, error)
+	CheckLoginExist(lo string) (bool, error)
 }
