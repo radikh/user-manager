@@ -59,7 +59,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ./db-data:/var/lib/postgresql/data
+# FATAL:  data directory "/var/lib/postgresql/data" has wrong ownership
+#      - ./db-data:/var/lib/postgresql/data
       - ./migrator/init:/docker-entrypoint-initdb.d/
     ports:
       - 5432:5432
@@ -70,12 +71,12 @@ services:
       - gpsnet
     volumes: 
       - ./migrator/migrations:/migrations
-    
     env_file:
       - .env
     command: ["-path", "./migrations", "-database",  "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB?sslmode=disable", "up"]
     depends_on: 
       - db
+    restart: on-failure
      
   consul-agent: 
     networks:
@@ -96,8 +97,11 @@ services:
 
   consul-server-bootstrap:
     image: consul:1.7.1
+    hostname: consul
     networks:
-      - gpsnet
+      gpsnet:
+        aliases:
+          - consul
     ports:
       - "8400:8400"
       - "8500:8500"
@@ -121,5 +125,6 @@ services:
       - db
       - migrator
       - graylog
-           
+      - consul-server-bootstrap
+    restart: on-failure
      
