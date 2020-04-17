@@ -14,7 +14,7 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.5.0
 	github.com/stretchr/testify v1.5.1
-	github.com/urfave/cli/v2 v2.2.0
+	github.com/urfave/cli/v2 v2.2.0 // indirect
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 	golang.org/x/net v0.0.0-20190522155817-f3200d17e092 // indirect
 	gopkg.in/gemnasium/logrus-graylog-hook.v2 v2.0.7

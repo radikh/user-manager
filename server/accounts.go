@@ -78,31 +78,41 @@ func (a *account) CreateAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createJSONResponse(w, http.StatusCreated, StatusCreateOK, user)
+	createJSONResponse(w, http.StatusCreated, StatusCreateOK, convertToResponsCreateAccount(user))
 }
 
 // GetInfoAccount check if account exist and return info about user
 func (a *account) GetInfoAccount(w http.ResponseWriter, r *http.Request) {
-	user, err := decodeUserFromBody(w, r)
-	if err != nil {
+	username, _, ok := r.BasicAuth()
+	if !ok {
 		return
 	}
 
-	user, err = (*model.UsersRepo)(a).GetInfo(user.Username)
+	user, err := (*model.UsersRepo)(a).GetInfo(username)
 	if err != nil {
 		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
 		return
 	}
 
-	createJSONResponse(w, http.StatusOK, StatusInfoOK, user)
+	createJSONResponse(w, http.StatusOK, StatusInfoOK, convertToResponseAccountInfo(user))
 }
 
 // UpdateAccount update data of account
 func (a *account) UpdateAccount(w http.ResponseWriter, r *http.Request) {
+	var user *model.User
+
+	username, password, ok := r.BasicAuth()
+	if !ok {
+		return
+	}
+
 	user, err := decodeUserFromBody(w, r)
 	if err != nil {
 		return
 	}
+
+	user.Username = username
+	user.Password = password
 
 	err = (*model.UsersRepo)(a).Update(user)
 	if err != nil {
@@ -110,17 +120,17 @@ func (a *account) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createJSONResponse(w, http.StatusOK, StatusUpdateOK, user)
+	createJSONResponse(w, http.StatusOK, StatusUpdateOK, convertToResponseAccountInfo(user))
 }
 
 // DeleteAccount deletes account of user in database
 func (a *account) DeleteAccount(w http.ResponseWriter, r *http.Request) {
-	user, err := decodeUserFromBody(w, r)
-	if err != nil {
+	username, _, ok := r.BasicAuth()
+	if !ok {
 		return
 	}
 
-	err = (*model.UsersRepo)(a).Delete(user.Username)
+	err := (*model.UsersRepo)(a).Delete(username)
 	if err != nil {
 		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
 		return
@@ -131,18 +141,17 @@ func (a *account) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 
 // ValidateAccount check if such account exist, check password and return user's info
 func (a *account) ValidateAccount(w http.ResponseWriter, r *http.Request) {
-	user, err := decodeUserFromBody(w, r)
-	if err != nil {
+	username, password, ok := r.BasicAuth()
+	if !ok {
 		return
 	}
-
-	dbuser, err := (*model.UsersRepo)(a).GetInfo(user.Username)
+	user, err := (*model.UsersRepo)(a).GetInfo(username)
 	if err != nil {
 		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
 		return
 	}
 
-	pwdValid, err := model.ComparePassword(user.Password, dbuser.Password)
+	pwdValid, err := model.ComparePassword(password, user.Password)
 	if err != nil {
 		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
 		return
@@ -153,5 +162,5 @@ func (a *account) ValidateAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createJSONResponse(w, http.StatusOK, StatusInfoOK, dbuser)
+	createJSONResponse(w, http.StatusOK, StatusInfoOK, user.ID)
 }
