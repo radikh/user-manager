@@ -2,7 +2,7 @@ package server
 
 import "github.com/lvl484/user-manager/model"
 
-type responsCreateAccount struct {
+type responseCreateAccount struct {
 	ID        string `json:"id"`
 	Username  string `json:"user_name"`
 	Email     string `json:"email"`
@@ -19,8 +19,8 @@ type responseAccountInfo struct {
 	Phone     string `json:"phone"`
 }
 
-func convertToResponsCreateAccount(u *model.User) responsCreateAccount {
-	return responsCreateAccount{
+func convertToResponseCreateAccount(u *model.User) responseCreateAccount {
+	return responseCreateAccount{
 		ID:        u.ID,
 		Username:  u.Username,
 		Email:     u.Email,

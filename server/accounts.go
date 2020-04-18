@@ -29,6 +29,7 @@ type account model.UsersRepo
 func createJSONResponse(w http.ResponseWriter, code int, msg string, data interface{}) {
 	w.WriteHeader(code)
 	_, err := w.Write([]byte(msg))
+
 	if err != nil {
 		logger.LogUM.Error(err)
 	}
@@ -51,18 +52,19 @@ func createErrorResponse(w http.ResponseWriter, code int, msg string, err error)
 		return
 	}
 
-	createJSONResponse(w, code, msg, nil)
+	createJSONResponse(w, code, msg, err)
 }
 
 // decodeUserFromBody draws up user structure from reguest body
 func decodeUserFromBody(w http.ResponseWriter, r *http.Request) (*model.User, error) {
 	var user *model.User
 	err := json.NewDecoder(r.Body).Decode(&user)
+
 	if err != nil {
 		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
 	}
 
-	return user, nil
+	return user, err
 }
 
 // CreateAccount create a new account in database
@@ -79,7 +81,7 @@ func (a *account) CreateAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createJSONResponse(w, http.StatusCreated, StatusCreateOK, convertToResponsCreateAccount(user))
+	createJSONResponse(w, http.StatusCreated, StatusCreateOK, convertToResponseCreateAccount(user))
 }
 
 // GetInfoAccount check if account exist and return info about user
@@ -151,7 +153,9 @@ func (a *account) ValidateAccount(w http.ResponseWriter, r *http.Request) {
 		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, nil)
 		return
 	}
+
 	user, err := (*model.UsersRepo)(a).GetInfo(username)
+
 	if err != nil {
 		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
 		return
