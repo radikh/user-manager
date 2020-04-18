@@ -22,7 +22,7 @@ type HTTP struct {
 	ur  *model.UsersRepo
 }
 
-// NewHTTP get address of server and return pointer to newserver
+// NewHTTP get configuration of server and return pointer to newserver
 func NewHTTP(cfg *config.Config, ur *model.UsersRepo) *HTTP {
 	srv := &http.Server{
 		Addr:         cfg.ServerAddress(),
@@ -36,7 +36,8 @@ func NewHTTP(cfg *config.Config, ur *model.UsersRepo) *HTTP {
 		acc: (*account)(ur),
 	}
 }
-func (h *HTTP) NewRouter() *mux.Router {
+
+func (h *HTTP) newRouter() *mux.Router {
 	mainRoute := mux.NewRouter()
 	withoutAuth := mainRoute.PathPrefix("/account")
 	withoutAuth.HandlerFunc(h.acc.CreateAccount).Methods(http.MethodPost)
@@ -54,7 +55,7 @@ func (h *HTTP) NewRouter() *mux.Router {
 // Start create all routes and starting server
 func (h *HTTP) Start() error {
 	logger.LogUM.Infof("Server Listening at %s...", h.srv.Addr)
-	return http.ListenAndServe(h.srv.Addr, h.NewRouter())
+	return http.ListenAndServe(h.srv.Addr, h.newRouter())
 }
 
 // Stop stops all routes and stopping server

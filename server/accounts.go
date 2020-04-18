@@ -62,13 +62,14 @@ func decodeUserFromBody(w http.ResponseWriter, r *http.Request) (*model.User, er
 		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
 	}
 
-	return user, err
+	return user, nil
 }
 
 // CreateAccount create a new account in database
 func (a *account) CreateAccount(w http.ResponseWriter, r *http.Request) {
 	user, err := decodeUserFromBody(w, r)
 	if err != nil {
+		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
 		return
 	}
 
@@ -85,6 +86,7 @@ func (a *account) CreateAccount(w http.ResponseWriter, r *http.Request) {
 func (a *account) GetInfoAccount(w http.ResponseWriter, r *http.Request) {
 	username, _, ok := r.BasicAuth()
 	if !ok {
+		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, nil)
 		return
 	}
 
@@ -103,11 +105,13 @@ func (a *account) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 
 	username, password, ok := r.BasicAuth()
 	if !ok {
+		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, nil)
 		return
 	}
 
 	user, err := decodeUserFromBody(w, r)
 	if err != nil {
+		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, nil)
 		return
 	}
 
@@ -127,6 +131,7 @@ func (a *account) UpdateAccount(w http.ResponseWriter, r *http.Request) {
 func (a *account) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	username, _, ok := r.BasicAuth()
 	if !ok {
+		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, nil)
 		return
 	}
 
@@ -139,10 +144,11 @@ func (a *account) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 	createJSONResponse(w, http.StatusNoContent, StatusDeleteOK, nil)
 }
 
-// ValidateAccount check if such account exist, check password and return user's info
+// ValidateAccount check if such account exist, check password and return user ID
 func (a *account) ValidateAccount(w http.ResponseWriter, r *http.Request) {
 	username, password, ok := r.BasicAuth()
 	if !ok {
+		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, nil)
 		return
 	}
 	user, err := (*model.UsersRepo)(a).GetInfo(username)
