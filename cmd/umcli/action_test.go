@@ -18,8 +18,6 @@ func TestCreateAction(t *testing.T) {
 	defer mockCtrl.Finish()
 	cliMock := NewMockActionChecker(mockCtrl)
 	cliMock.EXPECT().ExecuteAction(context, actionCreate).Return(nil)
-	err = CreateAction(context)
-	assert.NoError(t, err)
 	err = cliMock.ExecuteAction(context, actionCreate)
 	assert.NoError(t, err)
 }

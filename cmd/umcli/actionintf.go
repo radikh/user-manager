@@ -23,7 +23,7 @@ type ActionChecker interface {
 	DBConfig(context.Context) (*storage.DBConfig, error)
 	ConnectToDB(*storage.DBConfig) (*sql.DB, error)
 	UsersRepo() (*model.UsersRepo, error)
-	MessageCommandDone(msg string) error
+	MessageCommandDone(msg string, err error) error
 	ExecuteAction(c *cli.Context, action int) error
 }
 
@@ -163,7 +163,7 @@ func (ah *actionHandle) ExecuteAction(c *cli.Context, action int) error {
 	var argumentValue interface{}
 	returnMessage := msgErrorActionInput
 	logMessage := msgErrorActionInput
-	repo, err := actionHelper.UsersRepo()
+	repo, err := ah.UsersRepo()
 	if err != nil {
 		return errors.Wrap(err, msgErrorConnectDB)
 	}
@@ -171,7 +171,7 @@ func (ah *actionHandle) ExecuteAction(c *cli.Context, action int) error {
 	if action > 1 {
 		argumentValue, err = ah.splitLogin(c)
 	} else {
-		argumentValue, err = actionHelper.createUser(c)
+		argumentValue, err = ah.createUser(c)
 	}
 	if err != nil {
 		return errors.Wrap(err, msgConverteUser)
@@ -207,6 +207,6 @@ func (ah *actionHandle) ExecuteAction(c *cli.Context, action int) error {
 	default:
 		err = errors.New(msgErrorActionInput)
 	}
-	actionHelper.logAction(fmt.Sprintf(msgFormat, logMessage, returnMessage), err)
+	ah.logAction(fmt.Sprintf(msgFormat, logMessage, returnMessage), err)
 	return actionHelper.MessageCommandDone(returnMessage, err)
 }
