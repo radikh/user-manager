@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"time"
 
@@ -29,6 +28,9 @@ const (
 
 	StatusVerificationOK  = "Successfully verified"
 	VerificationLiveHours = 24
+
+	htmlVerification     = "verification.html"
+	htmlVerificationPath = "server/mail/mail_template/verification.html"
 )
 
 type account model.UsersRepo
@@ -168,6 +170,7 @@ func (a *account) ValidateAccount(w http.ResponseWriter, r *http.Request) {
 func (a *account) VerificationAccount(w http.ResponseWriter, r *http.Request) {
 	verification, err := decodeVerificationCodeFromBody(w, r)
 	if err != nil {
+		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
 		return
 	}
 
@@ -191,7 +194,7 @@ func (a *account) VerificationAccount(w http.ResponseWriter, r *http.Request) {
 
 		pwdValid, err := model.ComparePassword(verification.Password, dbuser.Password)
 		if err != nil {
-			createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
+			createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, fmt.Errorf("verification password mismatched"))
 			return
 		}
 
@@ -211,10 +214,9 @@ func (a *account) VerificationAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, fmt.Errorf("verification code is invalid"))
-	return
 }
 
-// decodeVerificationCodeFromBody draws up verification structure from request body
+// decodeVerificationCodeFromBody fills verification structure from request body
 func decodeVerificationCodeFromBody(w http.ResponseWriter, r *http.Request) (*model.Verification, error) {
 	var verification *model.Verification
 
@@ -228,11 +230,11 @@ func decodeVerificationCodeFromBody(w http.ResponseWriter, r *http.Request) (*mo
 
 // ReadHTMLVerificationPage reads HTML page from template and writes it into response
 func (a *account) ReadHTMLVerificationPage(w http.ResponseWriter, r *http.Request) {
-	page := template.New("verification.html")
+	page := template.New(htmlVerification)
 
-	page, err := page.ParseFiles("server/mail/mail_template/verification.html")
+	page, err := page.ParseFiles(htmlVerificationPath)
 	if err != nil {
-		log.Println(err)
+		createErrorResponse(w, http.StatusInternalServerError, StatusUnexpectedError, err)
 	}
 
 	data := struct {
@@ -245,8 +247,11 @@ func (a *account) ReadHTMLVerificationPage(w http.ResponseWriter, r *http.Reques
 
 	var tpl bytes.Buffer
 	if err := page.Execute(&tpl, data); err != nil {
-		log.Println(err)
+		createErrorResponse(w, http.StatusInternalServerError, StatusUnexpectedError, err)
 	}
 
-	w.Write(tpl.Bytes())
+	_, err = w.Write(tpl.Bytes())
+	if err != nil {
+		createErrorResponse(w, http.StatusInternalServerError, StatusUnexpectedError, err)
+	}
 }

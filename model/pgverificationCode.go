@@ -2,9 +2,8 @@ package model
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
-
-	"github.com/lvl484/user-manager/logger"
 
 	"github.com/pkg/errors"
 
@@ -27,13 +26,16 @@ const (
 
 // AddActivationCode adds new activation code for user to database
 func (ur *UsersRepo) AddActivationCode(user *User) error {
-	emailConfig := SetupEmailComponents(user.Email)
+	emailConfig, err := SetupEmailComponents(user.Email)
+	if err != nil {
+		return err
+	}
 
 	verificationCode := mail.GenerateVerificationCode()
 
 	emailConfig.SendMail(user.Username, verificationCode)
 
-	_, err := ur.db.Exec(queryAddActivationCode, user.ID, user.Username, user.Email, verificationCode, time.Now())
+	_, err = ur.db.Exec(queryAddActivationCode, user.ID, user.Username, user.Email, verificationCode, time.Now())
 	return err
 }
 
@@ -61,15 +63,15 @@ func (ur *UsersRepo) GetVerificationCodeTime(login string) (*time.Time, string, 
 }
 
 // SetupEmailComponents setups email components
-func SetupEmailComponents(email string) *mail.EmailInfo {
+func SetupEmailComponents(email string) (*mail.EmailInfo, error) {
 	cfg, err := config.NewConfig()
 	if err != nil {
-		logger.LogUM.Infof("SetupEmailComponents NewConfig error: %v", err)
+		return nil, fmt.Errorf("SetupEmailComponents NewConfig error: %w", err)
 	}
 
 	emailConfig, err := cfg.EmailConfig()
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("SetupEmailComponents EmailConfig error: %w", err)
 	}
 
 	return &mail.EmailInfo{
@@ -81,5 +83,5 @@ func SetupEmailComponents(email string) *mail.EmailInfo {
 		Subject:   mail.EmailSubject,
 		Body:      mail.EmailBody,
 		URL:       mail.EmailContentLink,
-	}
+	}, nil
 }

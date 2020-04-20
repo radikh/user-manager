@@ -17,6 +17,10 @@
             display: block;
             margin-bottom: 0.3em;
         }
+
+        p#output {
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -46,8 +50,8 @@
 
 <script>
     document.getElementById('verification_form').addEventListener('submit', submitForm);
-    output = document.getElementById("output")
-    submitButton = document.getElementById("submit")
+    output = document.getElementById("output");
+    submitButton = document.getElementById("submit");
 
     function submitForm(event) {
         // Cancel standard browser behaviour with send form
@@ -60,15 +64,29 @@
         let obj = {};
         formData.forEach((value, key) => obj[key] = value);
 
-        var xhr = new XMLHttpRequest();
-        var json = JSON.stringify(obj, null, 4)
+        let xhr = new XMLHttpRequest();
+        let json = JSON.stringify(obj, null, 4)
 
         xhr.open("POST", "/verification", true)
-        xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
-        xhr.send(json);
 
-        output.innerText = "Thank you! Verification have done successfully.";
-        submitButton.setAttribute("disabled", "disabled");
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                output.style.color = "green";
+                output.innerText = "Thank you! Verification have done successfully.";
+                submitButton.setAttribute("disabled", "disabled");
+            } else if (xhr.status === 400){
+                output.style.color = "orange";
+                output.innerText = "Your account is already verified!";
+                submitButton.setAttribute("disabled", "disabled");
+            } else {
+                output.style.color = "red";
+                output.innerText = "Sorry! Verification failed.";
+            }
+        };
+
+        xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+
+        xhr.send(json)
     }
 </script>
 </body>
