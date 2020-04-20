@@ -29,6 +29,7 @@ type User struct {
 	UpdatedAt *time.Time `json:"updated_at"`
 }
 
+// Users interface that will be used for co-operations with database
 type Users interface {
 	Add(args ...interface{}) error
 	Update(args ...interface{}) error
@@ -36,5 +37,9 @@ type Users interface {
 	Disable(login string) error
 	Activate(login string) error
 	GetInfo(login string) (*User, error)
-	CheckLoginExist(lo string) (bool, error)
+	CheckLoginExist(login string) (bool, error)
+	UpdatePassword(login string, password string) error
+	GetEmail(login string) (string, error)
+	SetActivationCode(login string, code string) error
+	CheckActivationCode(login string, code string) (bool, error)
 }
