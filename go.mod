@@ -18,4 +18,5 @@ require (
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 	golang.org/x/net v0.0.0-20190522155817-f3200d17e092 // indirect
 	gopkg.in/gemnasium/logrus-graylog-hook.v2 v2.0.7
+	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )

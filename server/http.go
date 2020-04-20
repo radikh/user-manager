@@ -22,7 +22,7 @@ type HTTP struct {
 	ur  *model.UsersRepo
 }
 
-// NewHTTP get address of server and return pointer to newserver
+// NewHTTP get address of server and return pointer to new server
 func NewHTTP(cfg *config.Config, ur *model.UsersRepo) *HTTP {
 	srv := &http.Server{
 		Addr:         cfg.ServerAddress(),
@@ -40,6 +40,12 @@ func (h *HTTP) NewRouter() *mux.Router {
 	mainRoute := mux.NewRouter()
 	withoutAuth := mainRoute.PathPrefix("/account")
 	withoutAuth.HandlerFunc(h.acc.CreateAccount).Methods(http.MethodPost)
+
+	verification := mainRoute.PathPrefix("/verification")
+	verification.HandlerFunc(h.acc.VerificationAccount).Methods(http.MethodPost)
+
+	verificationHTML := mainRoute.PathPrefix("/verification")
+	verificationHTML.HandlerFunc(h.acc.ReadHTMLVerificationPage).Methods(http.MethodGet)
 
 	auth := mainRoute.PathPrefix("/um").Subrouter()
 	auth.Use(middleware.NewBasicAuthentication(h.ur).Middleware)

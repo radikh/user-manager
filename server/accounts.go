@@ -4,8 +4,13 @@
 package server
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"html/template"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/lvl484/user-manager/logger"
 	"github.com/lvl484/user-manager/model"
@@ -21,6 +26,9 @@ const (
 	StatusAccountNotExist    = "Account does not exist"
 	StatusLoginInUse         = "Login in use"
 	StatusUnexpectedError    = "Unexpected error"
+
+	StatusVerificationOK  = "Successfully verified"
+	VerificationLiveHours = 24
 )
 
 type account model.UsersRepo
@@ -54,7 +62,7 @@ func createErrorResponse(w http.ResponseWriter, code int, msg string, err error)
 	createJSONResponse(w, code, msg, nil)
 }
 
-// decodeUserFromBody draws up user structure from reguest body
+// decodeUserFromBody draws up user structure from request body
 func decodeUserFromBody(w http.ResponseWriter, r *http.Request) (*model.User, error) {
 	var user *model.User
 	err := json.NewDecoder(r.Body).Decode(&user)
@@ -154,4 +162,91 @@ func (a *account) ValidateAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	createJSONResponse(w, http.StatusOK, StatusInfoOK, dbuser)
+}
+
+// VerificationAccount gets verification info from request body (login, code and password)
+func (a *account) VerificationAccount(w http.ResponseWriter, r *http.Request) {
+	verification, err := decodeVerificationCodeFromBody(w, r)
+	if err != nil {
+		return
+	}
+
+	vt, vc, err := (*model.UsersRepo)(a).GetVerificationCodeTime(verification.Login)
+	if err != nil {
+		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
+		return
+	}
+
+	if time.Now().Hour()-vt.Hour() > VerificationLiveHours {
+		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, fmt.Errorf("verification code expired"))
+		return
+	}
+
+	if verification.Code == vc {
+		dbuser, err := (*model.UsersRepo)(a).GetUserInfoIncludingSalted(verification.Login)
+		if err != nil {
+			createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
+			return
+		}
+
+		pwdValid, err := model.ComparePassword(verification.Password, dbuser.Password)
+		if err != nil {
+			createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
+			return
+		}
+
+		if !pwdValid {
+			createErrorResponse(w, http.StatusUnauthorized, StatusAuthenticateFailed, fmt.Errorf("wrong password"))
+			return
+		}
+
+		err = (*model.UsersRepo)(a).Activate(verification.Login)
+		if err != nil {
+			createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
+			return
+		}
+
+		createJSONResponse(w, http.StatusOK, StatusVerificationOK, verification)
+		return
+	}
+
+	createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, fmt.Errorf("verification code is invalid"))
+	return
+}
+
+// decodeVerificationCodeFromBody draws up verification structure from request body
+func decodeVerificationCodeFromBody(w http.ResponseWriter, r *http.Request) (*model.Verification, error) {
+	var verification *model.Verification
+
+	err := json.NewDecoder(r.Body).Decode(&verification)
+	if err != nil {
+		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
+	}
+
+	return verification, err
+}
+
+// ReadHTMLVerificationPage reads HTML page from template and writes it into response
+func (a *account) ReadHTMLVerificationPage(w http.ResponseWriter, r *http.Request) {
+	page := template.New("verification.html")
+
+	page, err := page.ParseFiles("server/mail/mail_template/verification.html")
+	if err != nil {
+		log.Println(err)
+	}
+
+	data := struct {
+		Login string
+		Code  string
+	}{
+		Login: r.URL.Query().Get("login"),
+		Code:  r.URL.Query().Get("code"),
+	}
+
+	var tpl bytes.Buffer
+	if err := page.Execute(&tpl, data); err != nil {
+		log.Println(err)
+	}
+
+	w.Write(tpl.Bytes())
 }

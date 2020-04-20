@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <title>Account Verification</title>
+    <style>
+        body {
+            margin: 2em auto;
+            max-width: 600px;
+        }
+
+        form div {
+            margin-bottom: 0.5em;
+        }
+        form div label, form div input {
+            display: block;
+            margin-bottom: 0.3em;
+        }
+    </style>
+</head>
+<body>
+<h1>Welcome to User Manager Service!</h1>
+<p>In order to finish registration in User Manager Service, Please fill the form...</p>
+
+<form id="verification_form"  method="post" action="/verification" enctype="application/json" target="_blank">
+    <div class="form-group">
+        <label for="login">Login</label>
+        <input type="text" name="login" data-name="login" id="login" value="{{.Login}}" required readonly placeholder="Enter your login here..."/>
+    </div>
+
+    <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" name="password" data-name="password" id="password" required placeholder="Enter password here..."/>
+    </div>
+    <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input type="password" name="confirmPassword" data-name="confirmPassword" id="confirmPassword" required placeholder="Enter password here..."/>
+    </div>
+
+    <div class="form-group">
+        <label for="code">Verification code</label>
+        <input type="text" name="code" data-name="code" size="50" id="code" value="{{.Code}}" required placeholder="Enter Verification Code here..."/>
+    </div>
+    <p>
+        <input id="submit" type="submit" value="Verification!" />
+    </p>
+</form>
+    <p id="output"></p>
+
+<script>
+    document.getElementById('verification_form').addEventListener('submit', submitForm);
+    output = document.getElementById("output")
+    submitButton = document.getElementById("submit"
+
+    function submitForm(event) {
+        // Cancel standard browser behaviour with send form
+        event.preventDefault();
+
+        // event.target — it is HTML-element form
+        let formData = new FormData(event.target);
+
+        // Gather data from form into object
+        let obj = {};
+        formData.forEach((value, key) => obj[key] = value);
+
+        var xhr = new XMLHttpRequest();
+        var json = JSON.stringify(obj, null, 4)
+
+        xhr.open("POST", "/verification", true)
+        xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+        xhr.send(json);
+
+        output.innerText = "Thank you! Verification have done successfully.";
+        submitButton.setAttribute("disabled", "disabled");
+    }
+</script>
+</body>
+</html>
