@@ -32,18 +32,18 @@ const (
 	msgCodeExpired          = "Activation code is expired"
 )
 
-//usersRepo structure that contain pointer to database
-type usersRepo struct {
+//UsersRepo structure that contain pointer to database
+type UsersRepo struct {
 	db *sql.DB
 }
 
-// NeusersRepo returns usersRepo with db
-func SetUsersRepo(data *sql.DB) *usersRepo {
-	return &usersRepo{db: data}
+// NeUsersRepo returns UsersRepo with db
+func SetUsersRepo(data *sql.DB) *UsersRepo {
+	return &UsersRepo{db: data}
 }
 
 // Add adds new user to database
-func (ur *usersRepo) Add(user *User) error {
+func (ur *UsersRepo) Add(user *User) error {
 	pwd, err := EncodePassword(NewPasswordConfig(), user.Password)
 	if err != nil {
 		return errors.Wrap(err, msgErrorHashingPassword)
@@ -58,35 +58,35 @@ func (ur *usersRepo) Add(user *User) error {
 }
 
 // Update update information about user in database
-func (ur *usersRepo) Update(user *User) error {
+func (ur *UsersRepo) Update(user *User) error {
 	_, err := ur.db.Exec(queryUpdate, user.Email, user.FirstName, user.LastName, user.Phone, time.Now(), user.Username)
 
 	return err
 }
 
 // Delete delete information about user in database
-func (ur *usersRepo) Delete(login string) error {
+func (ur *UsersRepo) Delete(login string) error {
 	_, err := ur.db.Exec(queryDelete, login)
 
 	return err
 }
 
 // Disable deactivate information about user in database
-func (ur *usersRepo) Disable(login string) error {
+func (ur *UsersRepo) Disable(login string) error {
 	_, err := ur.db.Exec(queryDisable, "true", login)
 
 	return err
 }
 
 // Activate deactivate information about user in database
-func (ur *usersRepo) Activate(login string) error {
+func (ur *UsersRepo) Activate(login string) error {
 	_, err := ur.db.Exec(queryDisable, "false", login)
 
 	return err
 }
 
 // GetInfo get user information from database
-func (ur *usersRepo) GetInfo(login string) (*User, error) {
+func (ur *UsersRepo) GetInfo(login string) (*User, error) {
 	var usr User
 	var salted bool
 	err := ur.db.QueryRow(querySelectInfo, login).Scan(&usr.ID, &usr.Username, &usr.Password,
@@ -105,7 +105,7 @@ func (ur *usersRepo) GetInfo(login string) (*User, error) {
 }
 
 //UpdatePassword update password for current user account
-func (ur *usersRepo) UpdatePassword(login string, password string) error {
+func (ur *UsersRepo) UpdatePassword(login string, password string) error {
 	pwd, err := EncodePassword(NewPasswordConfig(), password)
 	if err != nil {
 		return errors.Wrap(err, msgErrorHashingPassword)
@@ -116,7 +116,7 @@ func (ur *usersRepo) UpdatePassword(login string, password string) error {
 }
 
 //GetEmail returnns email for current user
-func (ur *usersRepo) GetEmail(login string) (string, error) {
+func (ur *UsersRepo) GetEmail(login string) (string, error) {
 	var email string
 	err := ur.db.QueryRow(queryGetEmail, login).Scan(&email)
 	if err != nil {
@@ -129,7 +129,7 @@ func (ur *usersRepo) GetEmail(login string) (string, error) {
 }
 
 //SetActivationCode write activation code for changing password to database
-func (ur *usersRepo) SetActivationCode(login string, code string) error {
+func (ur *UsersRepo) SetActivationCode(login string, code string) error {
 	trans, err := ur.db.Begin()
 	if err != nil {
 		return errors.Wrap(err, trans.Rollback().Error())
@@ -153,7 +153,7 @@ func (ur *usersRepo) SetActivationCode(login string, code string) error {
 
 //CheckActivationCode read from database  activation code for changing password
 // and compare it with provided code and return true if match, else return false
-func (ur *usersRepo) CheckActivationCode(login string, code string) (bool, error) {
+func (ur *UsersRepo) CheckActivationCode(login string, code string) (bool, error) {
 	var dbcode string
 	var expTime time.Time
 	err := ur.db.QueryRow(queryCheckCode, login).Scan(&dbcode, &expTime)
