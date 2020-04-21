@@ -28,7 +28,7 @@ func TestCreateEmail(t *testing.T) {
 		Code:      "1234567890qwertyuiop",
 	}
 
-	mail := CreateEmail(email, result)
+	mail := email.CreateEmail(result)
 
 	assert.Equal(t, email.Sender, mail.GetHeader("From")[0])
 	assert.Equal(t, email.Recipient, mail.GetHeader("To")[0])
@@ -50,7 +50,7 @@ func TestSetupURLQueryParameters(t *testing.T) {
 		Code:      "1234567890qwertyuiop",
 	}
 
-	urlQuery, err := SetupURLQueryParameters(*email, "123456789", "bodja")
+	urlQuery, err := email.SetupURLQueryParameters("123456789", "bodja")
 
 	require.NoError(t, err)
 	assert.Equal(t, "i.try.send.email.com?code=123456789&login=bodja", urlQuery)
