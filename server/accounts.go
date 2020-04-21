@@ -168,7 +168,7 @@ func (a *account) ValidateAccount(w http.ResponseWriter, r *http.Request) {
 
 // VerificationAccount gets verification info from request body (login, code and password)
 func (a *account) VerificationAccount(w http.ResponseWriter, r *http.Request) {
-	verification, err := decodeVerificationCodeFromBody(w, r)
+	verification, err := decodeVerificationInfoFromBody(w, r)
 	if err != nil {
 		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
 		return
@@ -216,8 +216,8 @@ func (a *account) VerificationAccount(w http.ResponseWriter, r *http.Request) {
 	createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, fmt.Errorf("verification code is invalid"))
 }
 
-// decodeVerificationCodeFromBody fills verification structure from request body
-func decodeVerificationCodeFromBody(w http.ResponseWriter, r *http.Request) (*model.Verification, error) {
+// decodeVerificationInfoFromBody fills verification structure from request body
+func decodeVerificationInfoFromBody(w http.ResponseWriter, r *http.Request) (*model.Verification, error) {
 	var verification *model.Verification
 
 	err := json.NewDecoder(r.Body).Decode(&verification)

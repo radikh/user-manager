@@ -69,9 +69,9 @@ func (mc EmailInfo) SendMail(login string, code string) error {
 	mc.Code = code
 
 	var err error
-	mc.URL, err = setupURLQueryParameters(mc, code, login)
+	mc.URL, err = SetupURLQueryParameters(mc, code, login)
 	if err != nil {
-		return fmt.Errorf("SendMail setupURLQueryParameters error: %w", err)
+		return fmt.Errorf("SendMail SetupURLQueryParameters error: %w", err)
 	}
 
 	result, err := formattingByTemplate(&mc)
@@ -79,7 +79,7 @@ func (mc EmailInfo) SendMail(login string, code string) error {
 		return fmt.Errorf("SendMail formattingByTemplate error: %w", err)
 	}
 
-	email := createEmail(&mc, result)
+	email := CreateEmail(&mc, result)
 
 	dialer := gomail.NewDialer(mc.Host, mc.Port, mc.Sender, mc.Password)
 
@@ -91,15 +91,15 @@ func (mc EmailInfo) SendMail(login string, code string) error {
 	return nil
 }
 
-func setupURLQueryParameters(mc EmailInfo, code string, login string) (string, error) {
+func SetupURLQueryParameters(mc EmailInfo, code string, login string) (string, error) {
 	u, err := url.Parse(mc.URL)
 	if err != nil {
-		return "", fmt.Errorf("setupURLQueryParameters parse url error: %w", err)
+		return "", fmt.Errorf("SetupURLQueryParameters parse url error: %w", err)
 	}
 
 	q, err := url.ParseQuery(u.RawQuery)
 	if err != nil {
-		return "", fmt.Errorf("setupURLQueryParameters parse url query error: %w", err)
+		return "", fmt.Errorf("SetupURLQueryParameters parse url query error: %w", err)
 	}
 
 	q.Set("code", code)
@@ -127,8 +127,8 @@ func formattingByTemplate(emailInfo *EmailInfo) (string, error) {
 	return tpl.String(), nil
 }
 
-// createEmail create email letter structure
-func createEmail(emailInfo *EmailInfo, result string) *gomail.Message {
+// CreateEmail create email letter structure
+func CreateEmail(emailInfo *EmailInfo, result string) *gomail.Message {
 	email := gomail.NewMessage()
 
 	email.SetHeader("From", emailInfo.Sender)

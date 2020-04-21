@@ -12,17 +12,17 @@ import (
 	"github.com/lvl484/user-manager/server/mail"
 )
 
-type Verification struct {
-	Login    string `json:"login"`
-	Password string `json:"password"`
-	Code     string `json:"code"`
-}
-
 const (
 	queryAddActivationCode          = `INSERT INTO email_codes(id, user_name, email, verification_code, created_at) VALUES ($1,$2,$3,$4,$5)`
 	queryDeleteActivationCode       = `DELETE FROM email_codes WHERE user_name=$1`
 	querySelectVerificationCodeTime = `SELECT verification_code, created_at FROM email_codes WHERE user_name=$1`
 )
+
+type Verification struct {
+	Login    string `json:"login"`
+	Password string `json:"password"`
+	Code     string `json:"code"`
+}
 
 // AddActivationCode adds new activation code for user to database
 func (ur *UsersRepo) AddActivationCode(user *User) error {
@@ -33,7 +33,10 @@ func (ur *UsersRepo) AddActivationCode(user *User) error {
 
 	verificationCode := mail.GenerateVerificationCode()
 
-	emailConfig.SendMail(user.Username, verificationCode)
+	err = emailConfig.SendMail(user.Username, verificationCode)
+	if err != nil {
+		return fmt.Errorf("AddActivationCode SendMail error: %w", err)
+	}
 
 	_, err = ur.db.Exec(queryAddActivationCode, user.ID, user.Username, user.Email, verificationCode, time.Now())
 	return err
