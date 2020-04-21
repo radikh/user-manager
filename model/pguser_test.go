@@ -224,25 +224,37 @@ func TestGetUserInfoIncludingSalted(t *testing.T) {
 
 	rowsInfo := sqlmock.NewRows([]string{"id", "user_name", "password", "email", "first_name", "last_name", "phone", "salted"}).
 		AddRow("3b60ac82-5e8f-4010-ac99-2344cfa72ce0", "user1", "$argon2id$v=19$m=65536,t=3,p=1$BCDndJ1kUOAAW/mwP7ViOQ$Ig4hpteBW1YM7Lrh3EHkHQ",
-			"email1@company.com", "Pedro", "Petrenko", "77777777777", "false")
+			"email1@company.com", "Pedro", "Petrenko", "77777777777", "true")
 
 	mock.ExpectQuery(regexp.QuoteMeta(querySelectInfo)).
 		WithArgs("user1").
 		WillReturnRows(rowsInfo)
 
-	user, err := userRepo.GetInfo("user1")
+	user, err := userRepo.GetUserInfoIncludingSalted("user1")
 	assert.NoError(t, err)
 	assert.Equal(t, &user1, user)
 
 	rowsActivated := sqlmock.NewRows([]string{"id", "user_name", "password", "email", "first_name", "last_name", "phone", "salted"}).
 		AddRow("3b60ac82-5e8f-4010-ac99-2344cfa72ce0", "user1", "$argon2id$v=19$m=65536,t=3,p=1$BCDndJ1kUOAAW/mwP7ViOQ$Ig4hpteBW1YM7Lrh3EHkHQ",
-			"email1@company.com", "Pedro", "Petrenko", "77777777777", "false")
+			"email1@company.com", "Pedro", "Petrenko", "77777777777", "true")
 
 	mock.ExpectQuery(regexp.QuoteMeta(querySelectInfo)).
 		WithArgs("user1").
 		WillReturnRows(rowsActivated)
 
-	_, err = userRepo.GetInfo("user1")
+	_, err = userRepo.GetUserInfoIncludingSalted("user1")
 	assert.NoError(t, err)
 
+	rowsVerified := sqlmock.NewRows([]string{"id", "user_name", "password", "email", "first_name", "last_name", "phone", "salted"}).
+		AddRow("3b60ac82-5e8f-4010-ac99-2344cfa72ce0", "user1", "$argon2id$v=19$m=65536,t=3,p=1$BCDndJ1kUOAAW/mwP7ViOQ$Ig4hpteBW1YM7Lrh3EHkHQ",
+			"email1@company.com", "Pedro", "Petrenko", "77777777777", "false")
+
+	mock.ExpectQuery(regexp.QuoteMeta(querySelectInfo)).
+		WithArgs("user1").
+		WillReturnRows(rowsVerified)
+
+	_, err = userRepo.GetUserInfoIncludingSalted("user1")
+	assert.Error(t, err)
+
+	assert.EqualError(t, err, "account is already verified")
 }
