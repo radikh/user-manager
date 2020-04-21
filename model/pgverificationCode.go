@@ -85,6 +85,6 @@ func SetupEmailComponents(email string) (*mail.EmailInfo, error) {
 		Recipient: email,
 		Subject:   mail.EmailSubject,
 		Body:      mail.EmailBody,
-		URL:       mail.EmailContentLink,
+		URL:       cfg.PublicURL + "/verification",
 	}, nil
 }

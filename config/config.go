@@ -41,6 +41,8 @@ type Config struct {
 	EmailHost     string `envconfig:"EMAIL_HOST" default:"smtp.gmail.com"`
 	EmailPort     int    `envconfig:"EMAIL_PORT" default:"587"`
 
+	PublicURL string `envconfig:"PUBLIC_URL" default:"http://localhost:8000"`
+
 	sd ServiceDiscovery
 }
 

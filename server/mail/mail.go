@@ -22,9 +22,8 @@ const (
 	htmlTemplateName = "template.html"
 	htmlTemplatePath = "server/mail/mail_template/template.html"
 
-	EmailSubject     = "Testing e-mail!"
-	EmailBody        = "This is email body. \r\n If you did not receive email letter, please looking for in the SPAM."
-	EmailContentLink = "http://127.0.0.1:8000/verification"
+	EmailSubject = "Registration UM service!"
+	EmailBody    = "This is email body. \r\n If you did not receive email letter, please looking for in the SPAM."
 )
 
 // EmailInfo includes necessary fields, which need for email authorization
@@ -91,6 +90,7 @@ func (mc EmailInfo) SendMail(login string, code string) error {
 	return nil
 }
 
+// SetupURLQueryParameters parses url, sets code and login as parameters
 func SetupURLQueryParameters(mc EmailInfo, code string, login string) (string, error) {
 	u, err := url.Parse(mc.URL)
 	if err != nil {
