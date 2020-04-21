@@ -37,4 +37,9 @@ type Users interface {
 	Activate(login string) error
 	GetInfo(login string) (*User, error)
 	CheckLoginExist(lo string) (bool, error)
+
+	AddActivationCode(user *User) error
+	DeleteVerificationCode(login string) error
+	GetUserInfoIncludingSalted(login string) (*User, error)
+	GetVerificationCodeTime(login string) (*time.Time, string, error)
 }
