@@ -230,9 +230,7 @@ func decodeVerificationInfoFromBody(w http.ResponseWriter, r *http.Request) (*mo
 
 // ReadHTMLVerificationPage reads HTML page from template and writes it into response
 func (a *account) ReadHTMLVerificationPage(w http.ResponseWriter, r *http.Request) {
-	page := template.New(htmlVerification)
-
-	page, err := page.ParseFiles(htmlVerificationPath)
+	page, err := parsingHTML()
 	if err != nil {
 		createErrorResponse(w, http.StatusInternalServerError, StatusUnexpectedError, err)
 	}
@@ -254,4 +252,15 @@ func (a *account) ReadHTMLVerificationPage(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		createErrorResponse(w, http.StatusInternalServerError, StatusUnexpectedError, err)
 	}
+}
+
+func parsingHTML() (*template.Template, error) {
+	page := template.New(htmlVerification)
+
+	page, err := page.ParseFiles(htmlVerificationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return page, nil
 }
