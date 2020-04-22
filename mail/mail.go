@@ -11,13 +11,6 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
-type Email interface {
-	SendMail(login string, code string) error
-	SetupURLQueryParameters(code string, login string) (string, error)
-	formattingByTemplate() (string, error)
-	CreateEmail(result string) *gomail.Message
-}
-
 const (
 	verificationTemplateName = "verification_email.html"
 
