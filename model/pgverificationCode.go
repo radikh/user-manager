@@ -3,13 +3,14 @@ package model
 import (
 	"database/sql"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/pkg/errors"
 
 	"github.com/lvl484/user-manager/config"
 
-	"github.com/lvl484/user-manager/server/mail"
+	"github.com/lvl484/user-manager/mail"
 )
 
 const (
@@ -26,19 +27,28 @@ type Verification struct {
 
 // AddActivationCode adds new activation code for user to database
 func (ur *UsersRepo) AddActivationCode(user *User) error {
-	emailConfig, err := SetupEmailComponents(user.Email)
+	cfg, err := config.NewConfig()
 	if err != nil {
-		return err
+		return fmt.Errorf("AddActivationCode NewConfig error: %w", err)
 	}
 
-	verificationCode := mail.GenerateVerificationCode()
-
-	err = emailConfig.SendMail(user.Username, verificationCode)
+	emailConfig, err := cfg.EmailConfig()
 	if err != nil {
-		return fmt.Errorf("AddActivationCode SendMail error: %w", err)
+		return fmt.Errorf("AddActivationCode EmailConfig error: %w", err)
 	}
 
-	_, err = ur.db.Exec(queryAddActivationCode, user.ID, user.Username, user.Email, verificationCode, time.Now())
+	verificationEmail := &mail.VerificationEmail{
+		UserEmail: user.Email,
+		Code:      generateVerificationCode(),
+		Username:  user.Username,
+	}
+
+	err = emailConfig.SendVerificationMail(verificationEmail)
+	if err != nil {
+		return fmt.Errorf("AddActivationCode SendVerificationMail error: %w", err)
+	}
+
+	_, err = ur.db.Exec(queryAddActivationCode, user.ID, verificationEmail.Username, verificationEmail.UserEmail, verificationEmail.Code, time.Now())
 	return err
 }
 
@@ -65,26 +75,31 @@ func (ur *UsersRepo) GetVerificationCodeTime(login string) (*time.Time, string, 
 	return verifyCodeTime, verificationCode, nil
 }
 
-// SetupEmailComponents setups email components
-func SetupEmailComponents(email string) (*mail.EmailInfo, error) {
-	cfg, err := config.NewConfig()
-	if err != nil {
-		return nil, fmt.Errorf("SetupEmailComponents NewConfig error: %w", err)
+// generateVerificationCode creates random string with length = activationCodeSize
+func generateVerificationCode() string {
+	const (
+		digitsForActivationCode          = "0123456789"
+		specialsSymbolsForActivationCode = "~=+%^*/()[]{}/!@#$?|"
+		literalsSymbolsForActivationCode = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+		activationCodeSize               = 50
+	)
+
+	rand.Seed(time.Now().UnixNano())
+
+	all := literalsSymbolsForActivationCode + digitsForActivationCode + specialsSymbolsForActivationCode
+
+	buf := make([]byte, activationCodeSize)
+
+	buf[0] = digitsForActivationCode[rand.Intn(len(digitsForActivationCode))]
+	buf[1] = specialsSymbolsForActivationCode[rand.Intn(len(specialsSymbolsForActivationCode))]
+
+	for i := 2; i < activationCodeSize; i++ {
+		buf[i] = all[rand.Intn(len(all))]
 	}
 
-	emailConfig, err := cfg.EmailConfig()
-	if err != nil {
-		return nil, fmt.Errorf("SetupEmailComponents EmailConfig error: %w", err)
-	}
+	rand.Shuffle(len(buf), func(i, j int) {
+		buf[i], buf[j] = buf[j], buf[i]
+	})
 
-	return &mail.EmailInfo{
-		Sender:    emailConfig.Sender,
-		Password:  emailConfig.Password,
-		Host:      emailConfig.Host,
-		Port:      emailConfig.Port,
-		Recipient: email,
-		Subject:   mail.EmailSubject,
-		Body:      mail.EmailBody,
-		URL:       cfg.PublicURL + "/verification",
-	}, nil
+	return string(buf)
 }

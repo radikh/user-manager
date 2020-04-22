@@ -9,14 +9,22 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/DATA-DOG/go-sqlmock"
+
 	"github.com/stretchr/testify/assert"
 )
 
+func TestGenerateVerificationCode(t *testing.T) {
+	code := generateVerificationCode()
+
+	assert.NotEmpty(t, code)
+	assert.Regexp(t, "\\W+", code, "non-word character")
+	assert.Regexp(t, "\\w+", code, "word character")
+	assert.NotRegexp(t, "\\s+", code, "whitespace character")
+}
+
 func TestDeleteVerificationCode(t *testing.T) {
 	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
+	require.NoError(t, err, "not expected when opening a stub database connection")
 	defer db.Close()
 
 	userRepo := NewUsersRepo(db)
@@ -31,9 +39,7 @@ func TestDeleteVerificationCode(t *testing.T) {
 
 func TestGetVerificationCodeTimeSuccess(t *testing.T) {
 	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
+	require.NoError(t, err, "not expected when opening a stub database connection")
 	defer db.Close()
 
 	userRepo := NewUsersRepo(db)
@@ -58,9 +64,7 @@ func TestGetVerificationCodeTimeSuccess(t *testing.T) {
 
 func TestGetVerificationCodeTimeFail(t *testing.T) {
 	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
+	require.NoError(t, err, "not expected when opening a stub database connection")
 	defer db.Close()
 
 	userRepo := NewUsersRepo(db)

@@ -16,6 +16,7 @@ func TestNewConfigRequired(t *testing.T) {
 	os.Setenv("POSTGRES_DB", "um_db")
 	os.Setenv("CONSUL_ADDRESS", "consul:8500")
 	os.Setenv("CONSUL_TOKEN", "token")
+	os.Setenv("EMAIL_PASSWORD", "password")
 
 	cfg, err := NewConfig()
 	require.NoError(t, err)
@@ -59,6 +60,7 @@ func TestNewConfigDefault(t *testing.T) {
 	os.Setenv("POSTGRES_DB", "unused")
 	os.Setenv("CONSUL_ADDRESS", "unused:8500")
 	os.Setenv("CONSUL_TOKEN", "unused")
+	os.Setenv("EMAIL_PASSWORD", "password")
 
 	cfg, err := NewConfig()
 	require.NoError(t, err)

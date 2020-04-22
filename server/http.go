@@ -45,7 +45,7 @@ func (h *HTTP) NewRouter() *mux.Router {
 	verification.HandlerFunc(h.acc.VerificationAccount).Methods(http.MethodPost)
 
 	verificationHTML := mainRoute.PathPrefix("/verification")
-	verificationHTML.HandlerFunc(h.acc.ReadHTMLVerificationPage).Methods(http.MethodGet)
+	verificationHTML.HandlerFunc(h.acc.HTMLVerificationPage).Methods(http.MethodGet)
 
 	auth := mainRoute.PathPrefix("/um").Subrouter()
 	auth.Use(middleware.NewBasicAuthentication(h.ur).Middleware)

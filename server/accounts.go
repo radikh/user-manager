@@ -9,8 +9,10 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"path"
 	"time"
 
+	"github.com/lvl484/user-manager/config"
 	"github.com/lvl484/user-manager/logger"
 	"github.com/lvl484/user-manager/model"
 )
@@ -29,8 +31,7 @@ const (
 	StatusVerificationOK  = "Successfully verified"
 	VerificationLiveHours = 24
 
-	htmlVerification     = "verification.html"
-	htmlVerificationPath = "server/mail/mail_template/verification.html"
+	htmlVerificationName = "verification_page.html"
 )
 
 type account model.UsersRepo
@@ -168,7 +169,9 @@ func (a *account) ValidateAccount(w http.ResponseWriter, r *http.Request) {
 
 // VerificationAccount gets verification info from request body (login, code and password)
 func (a *account) VerificationAccount(w http.ResponseWriter, r *http.Request) {
-	verification, err := decodeVerificationInfoFromBody(w, r)
+	var verification *model.Verification
+
+	err := json.NewDecoder(r.Body).Decode(&verification)
 	if err != nil {
 		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
 		return
@@ -185,54 +188,51 @@ func (a *account) VerificationAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if verification.Code == vc {
-		dbuser, err := (*model.UsersRepo)(a).GetUserInfoIncludingSalted(verification.Login)
-		if err != nil {
-			createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
-			return
-		}
-
-		pwdValid, err := model.ComparePassword(verification.Password, dbuser.Password)
-		if err != nil {
-			createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, fmt.Errorf("verification password mismatched"))
-			return
-		}
-
-		if !pwdValid {
-			createErrorResponse(w, http.StatusUnauthorized, StatusAuthenticateFailed, fmt.Errorf("wrong password"))
-			return
-		}
-
-		err = (*model.UsersRepo)(a).Activate(verification.Login)
-		if err != nil {
-			createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
-			return
-		}
-
-		createJSONResponse(w, http.StatusOK, StatusVerificationOK, verification)
+	if verification.Code != vc {
+		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, fmt.Errorf("verification code is invalid"))
 		return
 	}
 
-	createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, fmt.Errorf("verification code is invalid"))
-}
-
-// decodeVerificationInfoFromBody fills verification structure from request body
-func decodeVerificationInfoFromBody(w http.ResponseWriter, r *http.Request) (*model.Verification, error) {
-	var verification *model.Verification
-
-	err := json.NewDecoder(r.Body).Decode(&verification)
+	dbuser, err := (*model.UsersRepo)(a).GetUserInfoIncludingSalted(verification.Login)
 	if err != nil {
 		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
+		return
 	}
 
-	return verification, err
+	pwdValid, err := model.ComparePassword(verification.Password, dbuser.Password)
+	if err != nil {
+		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, fmt.Errorf("verification password mismatched"))
+		return
+	}
+
+	if !pwdValid {
+		createErrorResponse(w, http.StatusUnauthorized, StatusAuthenticateFailed, fmt.Errorf("wrong password"))
+		return
+	}
+
+	err = (*model.UsersRepo)(a).Activate(verification.Login)
+	if err != nil {
+		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
+		return
+	}
+
+	createJSONResponse(w, http.StatusOK, StatusVerificationOK, verification)
 }
 
-// ReadHTMLVerificationPage reads HTML page from template and writes it into response
-func (a *account) ReadHTMLVerificationPage(w http.ResponseWriter, r *http.Request) {
-	page, err := parsingHTML()
+// HTMLVerificationPage reads HTML page from template and writes it into response
+func (a *account) HTMLVerificationPage(w http.ResponseWriter, r *http.Request) {
+	c, err := config.NewConfig()
 	if err != nil {
 		createErrorResponse(w, http.StatusInternalServerError, StatusUnexpectedError, err)
+		return
+	}
+
+	templatePath := path.Join(c.TemplatePath, htmlVerificationName)
+
+	page, err := template.ParseFiles(templatePath)
+	if err != nil {
+		createErrorResponse(w, http.StatusInternalServerError, StatusUnexpectedError, err)
+		return
 	}
 
 	data := struct {
@@ -246,21 +246,12 @@ func (a *account) ReadHTMLVerificationPage(w http.ResponseWriter, r *http.Reques
 	var tpl bytes.Buffer
 	if err := page.Execute(&tpl, data); err != nil {
 		createErrorResponse(w, http.StatusInternalServerError, StatusUnexpectedError, err)
+		return
 	}
 
 	_, err = w.Write(tpl.Bytes())
 	if err != nil {
 		createErrorResponse(w, http.StatusInternalServerError, StatusUnexpectedError, err)
+		return
 	}
-}
-
-func parsingHTML() (*template.Template, error) {
-	page := template.New(htmlVerification)
-
-	page, err := page.ParseFiles(htmlVerificationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	return page, nil
 }

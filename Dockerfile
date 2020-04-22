@@ -15,6 +15,6 @@ RUN go build -o /opt/services/user-manager/cmd/umserver .
 FROM alpine:3.7
 COPY --from=builder /opt/services/user-manager/cmd/umserver /opt/services/user-manager
 # Usage template for email sending
-COPY server/mail/mail_template server/mail/mail_template
+COPY mail/mail_template mail/mail_template
 RUN chmod +x /opt/services/user-manager
 CMD /opt/services/user-manager
