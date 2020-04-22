@@ -10,17 +10,18 @@ import (
 	"github.com/lvl484/user-manager/config"
 	"github.com/lvl484/user-manager/logger"
 	"github.com/lvl484/user-manager/model"
-	"github.com/lvl484/user-manager/server/http/middleware"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
+// HTTP server struct
 type HTTP struct {
 	srv *http.Server
+	acc *account
 	ur  *model.UsersRepo
 }
 
+// NewHTTP get address of server and return pointer to newserver
 func NewHTTP(cfg *config.Config, ur *model.UsersRepo) *HTTP {
 	srv := &http.Server{
 		Addr:         cfg.ServerAddress(),
@@ -31,25 +32,25 @@ func NewHTTP(cfg *config.Config, ur *model.UsersRepo) *HTTP {
 	return &HTTP{
 		srv: srv,
 		ur:  ur,
+		acc: (*account)(ur),
 	}
 }
 
-// TODO: this method is using only for testing work
-func (h *HTTP) UUID(w http.ResponseWriter, r *http.Request) {
-	_, _ = w.Write([]byte(uuid.New().String()))
+// NewRouter return new mux router
+func (h *HTTP) NewRouter() *mux.Router {
+	mainRoute := mux.NewRouter()
+	passwordRouter := mainRoute.PathPrefix("/password")
+	passwordRouter.HandlerFunc(h.acc.RequestPasswordChange).Methods(http.MethodPost)
+	passwordRouter.HandlerFunc(h.acc.UpdatePassword).Methods(http.MethodPut)
+	passwordRouter.HandlerFunc(h.acc.RefreshActivationCode).Methods(http.MethodGet)
+
+	return mainRoute
 }
 
 // Start create all routes and starting server
 func (h *HTTP) Start() error {
-	mainRoute := mux.NewRouter()
-	mainRoute.Use(middleware.NewBasicAuthentication(h.ur).Middleware)
-	// TODO: replace it with necessary REST APIs
-	mainRoute.HandleFunc("/uuid", h.UUID).Methods(http.MethodGet)
-
-	h.srv.Handler = mainRoute
-
 	logger.LogUM.Infof("Server Listening at %s...", h.srv.Addr)
-	return h.srv.ListenAndServe()
+	return http.ListenAndServe(h.srv.Addr, h.NewRouter())
 }
 
 // Stop stops all routes and stopping server
