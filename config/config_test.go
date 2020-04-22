@@ -170,10 +170,12 @@ func TestConfigLoggerConfig(t *testing.T) {
 
 func TestConfigEmailConfig(t *testing.T) {
 	c := Config{
-		EmailAddress:  "user.namager@gmail.com",
-		EmailPassword: "lvl484Golang",
+		EmailAddress:  "user@example.com",
+		EmailPassword: "password",
 		EmailHost:     "smtp.gmail.com",
 		EmailPort:     587,
+		TemplatePath:  "http://localhost:8000/verification",
+		PublicURL:     "http://localhost:8000",
 	}
 
 	got, err := c.EmailConfig()
@@ -183,4 +185,6 @@ func TestConfigEmailConfig(t *testing.T) {
 	assert.Equal(t, c.EmailPassword, got.Password)
 	assert.Equal(t, c.EmailHost, got.Host)
 	assert.Equal(t, c.EmailPort, got.Port)
+	assert.Equal(t, c.TemplatePath, got.TemplatePath)
+	assert.Equal(t, c.PublicURL, got.PublicURL)
 }
