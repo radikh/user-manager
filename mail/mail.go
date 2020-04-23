@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
-	"log"
 	"net/url"
 	"path"
 
@@ -101,7 +100,6 @@ func renderTemplate(templateName string, params interface{}) (string, error) {
 
 	var tpl bytes.Buffer
 	if err := t.Execute(&tpl, params); err != nil {
-		log.Println(err)
 		return "", fmt.Errorf("renderTemplate Execute error: %w", err)
 	}
 
