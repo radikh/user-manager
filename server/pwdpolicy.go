@@ -14,17 +14,21 @@ import (
 
 	"gopkg.in/gomail.v2"
 
-	"github.com/lvl484/user-manager/logger"
 	"github.com/lvl484/user-manager/model"
 )
 
 const (
-	StatusCreateOK        = "Successfully created"
-	StatusUpdateOK        = "Successfully updated"
-	StatusRefreshOK       = "Successfully refreshed"
-	StatusBadRequest      = "Bad request"
-	StatusUnexpectedError = "Unexpected error"
-	mailText              = `<!DOCTYPE html>
+	errNoUserName       = "No user name in header"
+	errCodeNoMatch      = "Code does not match"
+	reqCode             = "User's ( %s ) make request for changing password"
+	refCode             = "User's ( %s ) make request for refreshing activation code"
+	updPassword         = "User's ( %s ) password successfully updated"
+	loggerMessage       = `Operation responce code: "%d" Message: "%s" Data: "%v"`
+	runes               = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	StatusRefreshOK     = "Successfully refreshed"
+	StatusActionOK      = "Operation successfull"
+	msgActiveCodeExists = "Active code exists. Check you's email or refresh for new"
+	mailText            = `<!DOCTYPE html>
 	<html lang="en">
 	<head>
 		<meta charset="UTF-8">
@@ -54,15 +58,6 @@ const (
 	</html>`
 )
 
-const (
-	errNoUserName  = "No user name in header"
-	errCodeNoMatch = "Code does not match"
-	reqCode        = "User's <<%s>> make request for changing password"
-	refCode        = "User's <<%s>> make request for refreshing activation code"
-	updPassword    = "User's <<%s>> password successfully updated"
-	runes          = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-)
-
 // Police struct for changing password
 type Policy struct {
 	// Unique login
@@ -73,37 +68,6 @@ type Policy struct {
 	Code string `json:"code"`
 }
 
-type account model.UsersRepo
-
-// createJSONResponse create a JSON response
-func createJSONResponse(w http.ResponseWriter, code int, msg string, data interface{}) {
-	w.WriteHeader(code)
-	_, err := w.Write([]byte(msg))
-	if err != nil {
-		logger.LogUM.Error(err)
-	}
-
-	err = json.NewEncoder(w).Encode(data)
-	if err != nil {
-		logger.LogUM.Error(err)
-	}
-}
-
-// createErrorResponse create an error response
-func createErrorResponse(w http.ResponseWriter, code int, msg string, err error) {
-	if err != nil {
-		createJSONResponse(w, code, msg, struct {
-			Error string `json:"error"`
-		}{
-			Error: err.Error(),
-		})
-
-		return
-	}
-
-	createJSONResponse(w, code, msg, nil)
-}
-
 // decodePolicyFromBody draws up Policy structure from reguest body
 func decodePolicyFromBody(r *http.Request) (*Policy, error) {
 	var pwd *Policy
@@ -111,49 +75,69 @@ func decodePolicyFromBody(r *http.Request) (*Policy, error) {
 	return pwd, err
 }
 
-// RequestPasswordChange start procedure for changing password:
-// -disable accounnt for a time of passing of procedure
-// -generate and send activation code to user's email
-func (a *account) RequestPasswordChange(w http.ResponseWriter, r *http.Request) {
-	login, err := a.createNewActivationCode(r)
-	if err != nil {
-		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
-		return
-	}
-
-	createJSONResponse(w, http.StatusOK, StatusCreateOK, fmt.Sprintf(reqCode, login))
-}
-
-// RefreshActivetionCode create new activation code and send to user
-func (a *account) RefreshActivationCode(w http.ResponseWriter, r *http.Request) {
-	login, err := a.createNewActivationCode(r)
-	if err != nil {
-		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
-		return
-	}
-	createJSONResponse(w, http.StatusOK, StatusCreateOK, fmt.Sprintf(refCode, login))
-}
-
-// createNewActivationCode create new activation code and send to user
-func (a *account) createNewActivationCode(r *http.Request) (string, error) {
+// decodeLoginFromHeader draws up username from header
+func decodeLoginFromHeader(r *http.Request) (string, error) {
 	login, _, ok := r.BasicAuth()
 	if !ok {
 		return "", errors.New(errNoUserName)
 	}
+	return login, nil
+}
+
+// RequestPasswordChange start procedure for changing password:
+// -disable accounnt for a time of passing of procedure
+// -generate and send activation code to user's email
+func (a *account) RequestPasswordChange(w http.ResponseWriter, r *http.Request) {
+	login, err := decodeLoginFromHeader(r)
+	if err != nil {
+		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
+		return
+	}
+	_, err = (*model.UsersRepo)(a).CheckCodeForUser(login)
+	if err == nil {
+		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, errors.New(msgActiveCodeExists))
+		return
+	}
+	err = a.createNewActivationCode(login)
+	if err != nil {
+		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
+		return
+	}
+
+	createJSONResponse(w, http.StatusOK, StatusActionOK, fmt.Sprintf(reqCode, login))
+}
+
+// RefreshActivetionCode create new activation code and send to user
+func (a *account) RefreshActivationCode(w http.ResponseWriter, r *http.Request) {
+	login, err := decodeLoginFromHeader(r)
+	if err != nil {
+		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
+		return
+	}
+	err = a.createNewActivationCode(login)
+	if err != nil {
+		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, err)
+		return
+	}
+	createJSONResponse(w, http.StatusOK, StatusActionOK, fmt.Sprintf(refCode, login))
+}
+
+// createNewActivationCode create new activation code and send to user
+func (a *account) createNewActivationCode(login string) error {
 	code := createCode(login)
 	err := (*model.UsersRepo)(a).SetActivationCode(login, code)
 	if err != nil {
-		return "", err
+		return err
 	}
 	email, err := (*model.UsersRepo)(a).GetEmail(login)
 	if err != nil {
-		return "", err
+		return err
 	}
 	err = sendEmail(code, email)
 	if err != nil {
-		return "", err
+		return err
 	}
-	return login, nil
+	return nil
 }
 
 // UpdatePassword ends procedure of changing password and update user's password
@@ -187,7 +171,7 @@ func (a *account) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 // sendEmail send activation code to user's email
 func sendEmail(code string, mail string) error {
 	email := gomail.NewMessage()
-
+	// TODO configuration data as sender, host, password would be taken from conf module after it updates
 	email.SetHeader("From", "user.namager@gmail.com")
 	email.SetHeader("To", mail)
 	email.SetHeader("Subject", "Activation code for changing password")

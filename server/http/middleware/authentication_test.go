@@ -21,7 +21,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	logger.SetLogger(&logger.LogConfig{Output: "Stdout", Level: "debug"})
+	_ = logger.SetLogger(&logger.LogConfig{Output: "Stdout", Level: "debug"})
 
 	code := m.Run()
 

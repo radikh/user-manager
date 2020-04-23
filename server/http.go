@@ -7,11 +7,10 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/lvl484/user-manager/config"
 	"github.com/lvl484/user-manager/logger"
 	"github.com/lvl484/user-manager/model"
-
-	"github.com/gorilla/mux"
 )
 
 // HTTP server struct
@@ -38,11 +37,12 @@ func NewHTTP(cfg *config.Config, ur *model.UsersRepo) *HTTP {
 
 // NewRouter return new mux router
 func (h *HTTP) NewRouter() *mux.Router {
+
 	mainRoute := mux.NewRouter()
-	passwordRouter := mainRoute.PathPrefix("/password")
-	passwordRouter.HandlerFunc(h.acc.RequestPasswordChange).Methods(http.MethodPost)
-	passwordRouter.HandlerFunc(h.acc.UpdatePassword).Methods(http.MethodPut)
-	passwordRouter.HandlerFunc(h.acc.RefreshActivationCode).Methods(http.MethodGet)
+
+	mainRoute.HandleFunc("/password", h.acc.RequestPasswordChange).Methods(http.MethodPost)
+	mainRoute.HandleFunc("/password", h.acc.UpdatePassword).Methods(http.MethodPut)
+	mainRoute.HandleFunc("/password", h.acc.RefreshActivationCode).Methods(http.MethodGet)
 
 	return mainRoute
 }
