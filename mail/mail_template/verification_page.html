@@ -76,7 +76,7 @@
                 submitButton.setAttribute("disabled", "disabled");
             } else if (xhr.status === 400){
                 output.style.color = "orange";
-                output.innerText = "Your account is already verified!";
+                output.innerText = "Your account is already verified or expired of verification code!";
                 submitButton.setAttribute("disabled", "disabled");
             } else {
                 output.style.color = "red";
