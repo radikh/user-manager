@@ -183,7 +183,7 @@ func (a *account) VerificationAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if time.Now().Hour()-vt.Hour() > VerificationLiveHours {
+	if time.Since(*vt).Hours() > VerificationLiveHours {
 		createErrorResponse(w, http.StatusBadRequest, StatusBadRequest, fmt.Errorf("verification code expired"))
 		return
 	}
