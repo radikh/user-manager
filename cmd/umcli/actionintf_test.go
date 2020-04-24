@@ -10,12 +10,11 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
-	"github.com/urfave/cli/v2"
-
 	"github.com/lvl484/user-manager/config"
 	"github.com/lvl484/user-manager/model"
 	"github.com/lvl484/user-manager/storage"
+	"github.com/stretchr/testify/assert"
+	"github.com/urfave/cli/v2"
 )
 
 func mockDB(t *testing.T) *sql.DB {
@@ -96,7 +95,7 @@ func TestActionHandleUsersRepo(t *testing.T) {
 	defer mockCtrl.Finish()
 	cliMock := NewMockActionChecker(mockCtrl)
 	db := mockDB(t)
-	repo1 := model.NewUsersRepo(db)
+	repo1 := model.SetUsersRepo(db)
 	cliMock.EXPECT().UsersRepo().Return(repo1, nil)
 	repo, err := cliMock.UsersRepo()
 	assert.NoError(t, err)
@@ -250,4 +249,60 @@ func TestActionHandleExecuteAction(t *testing.T) {
 	context := cli.NewContext(app, set, nil)
 	err = ah.ExecuteAction(context, 7)
 	assert.Error(t, err)
+}
+
+func Test_actionHandle_checkRole(t *testing.T) {
+	type fields struct {
+		ccfg *config.Config
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ah := &actionHandle{
+				ccfg: tt.fields.ccfg,
+			}
+			if err := ah.checkRole(); (err != nil) != tt.wantErr {
+				t.Errorf("actionHandle.checkRole() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_actionHandle_getCredentials(t *testing.T) {
+	type fields struct {
+		ccfg *config.Config
+	}
+	tests := []struct {
+		name      string
+		fields    fields
+		wantLogin string
+		wantPwd   string
+		wantErr   bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ah := &actionHandle{
+				ccfg: tt.fields.ccfg,
+			}
+			gotLogin, gotPwd, err := ah.getCredentials()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("actionHandle.getCredentials() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotLogin != tt.wantLogin {
+				t.Errorf("actionHandle.getCredentials() gotLogin = %v, want %v", gotLogin, tt.wantLogin)
+			}
+			if gotPwd != tt.wantPwd {
+				t.Errorf("actionHandle.getCredentials() gotPwd = %v, want %v", gotPwd, tt.wantPwd)
+			}
+		})
+	}
 }

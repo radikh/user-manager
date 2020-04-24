@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"database/sql"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"github.com/lvl484/user-manager/storage"
 	"github.com/pkg/errors"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // ActionChecker auxiliary interface for commands and testing
@@ -70,7 +72,7 @@ func (ah *actionHandle) UsersRepo() (*model.UsersRepo, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, msgErrorConnectDB)
 	}
-	repo := model.NewUsersRepo(db)
+	repo := model.SetUsersRepo(db)
 	return repo, nil
 }
 
@@ -163,7 +165,14 @@ func (ah *actionHandle) ExecuteAction(c *cli.Context, action int) error {
 	var argumentValue interface{}
 	returnMessage := msgErrorActionInput
 	logMessage := msgErrorActionInput
+	err := ah.checkRole()
+	if err != nil {
+		return err
+	}
 	repo, err := ah.UsersRepo()
+	if err != nil {
+		return err
+	}
 	if err != nil {
 		return errors.Wrap(err, msgErrorConnectDB)
 	}
@@ -191,6 +200,7 @@ func (ah *actionHandle) ExecuteAction(c *cli.Context, action int) error {
 		var user *model.User
 		logMessage = msgGetInfo
 		user, err = repo.GetInfo(argumentValue.(string))
+		user.Password = "*******"
 		returnMessage = fmt.Sprintf("%+v", user)
 	case actionDelete:
 		logMessage = msgDelete
@@ -209,4 +219,37 @@ func (ah *actionHandle) ExecuteAction(c *cli.Context, action int) error {
 	}
 	ah.logAction(fmt.Sprintf(msgFormat, logMessage, returnMessage), err)
 	return actionHelper.MessageCommandDone(returnMessage, err)
+}
+
+// ExecuteAction execute prepare and     command
+func (ah *actionHandle) checkRole() error {
+	username, password, err := ah.getCredentials()
+	if err != nil {
+		return errors.Wrap(err, msgErrorCheckCredentials)
+	}
+	repo, err := ah.UsersRepo()
+	if err != nil {
+		return errors.Wrap(err, msgErrorConnectDB)
+	}
+	status, err := repo.CheckAdminRole(username, password)
+	if err != nil {
+		return err
+	}
+	if !status {
+		return errors.Wrap(err, msgErrorCheckCredentials)
+	}
+	return nil
+}
+
+// ExecuteAction execute prepare and     command
+func (ah *actionHandle) getCredentials() (login string, pwd string, err error) {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter your's credentials")
+	fmt.Print("Enter Username: ")
+	username, _ := reader.ReadString('\n')
+	fmt.Print("Enter Password: ")
+	bytePassword, err := terminal.ReadPassword(0)
+	password := string(bytePassword)
+
+	return username, password, err
 }
