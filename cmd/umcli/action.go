@@ -5,7 +5,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var actionHelper ActionChecker
+var actionHelper actionHandle
 
 // CreateAction create new user in database
 func CreateAction(c *cli.Context) error {

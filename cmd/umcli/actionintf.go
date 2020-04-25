@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"io"
 	"os"
 	"reflect"
 	"strings"
@@ -27,6 +28,7 @@ type ActionChecker interface {
 	UsersRepo() (*model.UsersRepo, error)
 	MessageCommandDone(msg string, err error) error
 	ExecuteAction(c *cli.Context, action int) error
+	getCredentials(rd io.Reader) (login string, pwd string, err error)
 }
 
 // actionHandle structure that implements ActionChecker interface
@@ -163,20 +165,15 @@ func (ah *actionHandle) SetConfiguration(cfg *config.Config) *actionHandle {
 // ExecuteAction execute prepare and     command
 func (ah *actionHandle) ExecuteAction(c *cli.Context, action int) error {
 	var argumentValue interface{}
-	returnMessage := msgErrorActionInput
-	logMessage := msgErrorActionInput
-	err := ah.checkRole()
-	if err != nil {
-		return err
-	}
+	var returnMessage, logMessage string
 	repo, err := ah.UsersRepo()
-	if err != nil {
-		return err
-	}
 	if err != nil {
 		return errors.Wrap(err, msgErrorConnectDB)
 	}
-
+	err = ah.checkRole()
+	if err != nil {
+		return err
+	}
 	if action > 1 {
 		argumentValue, err = ah.splitLogin(c)
 	} else {
@@ -187,35 +184,47 @@ func (ah *actionHandle) ExecuteAction(c *cli.Context, action int) error {
 	}
 	switch action {
 	case actionCreate:
-		logMessage = msgCreate
 		user := argumentValue.(*model.User)
 		err = repo.Add(user)
-		returnMessage = fmt.Sprintf("%s was created", user.Username)
+		if err == nil {
+			logMessage = msgCreate
+			returnMessage = fmt.Sprintf("%s was created", user.Username)
+		}
 	case actionUpdate:
-		logMessage = msgUpdate
 		user := argumentValue.(*model.User)
 		err = repo.Update(user)
-		returnMessage = fmt.Sprintf("%s was updated", user.Username)
+		if err == nil {
+			logMessage = msgUpdate
+			returnMessage = fmt.Sprintf("%s was updated", user.Username)
+		}
 	case actionInfo:
-		var user *model.User
-		logMessage = msgGetInfo
-		user, err = repo.GetInfo(argumentValue.(string))
-		user.Password = "*******"
-		returnMessage = fmt.Sprintf("%+v", user)
+		user, err := repo.GetInfo(argumentValue.(string))
+		if err == nil {
+			logMessage = msgGetInfo
+			user.Password = "*******"
+			returnMessage = fmt.Sprintf("%+v", user)
+		}
 	case actionDelete:
-		logMessage = msgDelete
-		returnMessage = msgUserDeleted
 		err = repo.Delete(argumentValue.(string))
+		if err == nil {
+			logMessage = msgDelete
+			returnMessage = msgUserDeleted
+		}
 	case actionActivate:
-		logMessage = msgActivate
-		returnMessage = msgUserActivated
 		err = repo.Activate(argumentValue.(string))
+		if err == nil {
+			logMessage = msgActivate
+			returnMessage = msgUserActivated
+		}
 	case actionDisable:
-		logMessage = msgDisable
-		returnMessage = msgUserDisable
 		err = repo.Disable(argumentValue.(string))
+		if err == nil {
+			logMessage = msgDisable
+			returnMessage = msgUserDisable
+		}
 	default:
 		err = errors.New(msgErrorActionInput)
+		logMessage = msgErrorActionInput
 	}
 	ah.logAction(fmt.Sprintf(msgFormat, logMessage, returnMessage), err)
 	return actionHelper.MessageCommandDone(returnMessage, err)
@@ -223,7 +232,7 @@ func (ah *actionHandle) ExecuteAction(c *cli.Context, action int) error {
 
 // ExecuteAction execute prepare and     command
 func (ah *actionHandle) checkRole() error {
-	username, password, err := ah.getCredentials()
+	username, password, err := ah.getCredentials(os.Stdin)
 	if err != nil {
 		return errors.Wrap(err, msgErrorCheckCredentials)
 	}
@@ -242,14 +251,14 @@ func (ah *actionHandle) checkRole() error {
 }
 
 // ExecuteAction execute prepare and     command
-func (ah *actionHandle) getCredentials() (login string, pwd string, err error) {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter your's credentials")
-	fmt.Print("Enter Username: ")
+func (ah *actionHandle) getCredentials(rd io.Reader) (login string, pwd string, err error) {
+	reader := bufio.NewReader(rd)
+	fmt.Print("\nEnter your's credentials")
+	fmt.Print("\nEnter Username: ")
 	username, _ := reader.ReadString('\n')
-	fmt.Print("Enter Password: ")
-	bytePassword, err := terminal.ReadPassword(0)
+	fmt.Print("\nEnter Password: ")
+	bytePassword, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 	password := string(bytePassword)
-
-	return username, password, err
+	fmt.Print("\n")
+	return strings.TrimSpace(username), password, err
 }

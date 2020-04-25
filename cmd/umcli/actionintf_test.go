@@ -2,10 +2,12 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"database/sql"
 	"flag"
 	"io/ioutil"
+	"strings"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -251,58 +253,12 @@ func TestActionHandleExecuteAction(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func Test_actionHandle_checkRole(t *testing.T) {
-	type fields struct {
-		ccfg *config.Config
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ah := &actionHandle{
-				ccfg: tt.fields.ccfg,
-			}
-			if err := ah.checkRole(); (err != nil) != tt.wantErr {
-				t.Errorf("actionHandle.checkRole() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
+func TestGetCredentials(t *testing.T) {
 
-func Test_actionHandle_getCredentials(t *testing.T) {
-	type fields struct {
-		ccfg *config.Config
-	}
-	tests := []struct {
-		name      string
-		fields    fields
-		wantLogin string
-		wantPwd   string
-		wantErr   bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ah := &actionHandle{
-				ccfg: tt.fields.ccfg,
-			}
-			gotLogin, gotPwd, err := ah.getCredentials()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("actionHandle.getCredentials() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if gotLogin != tt.wantLogin {
-				t.Errorf("actionHandle.getCredentials() gotLogin = %v, want %v", gotLogin, tt.wantLogin)
-			}
-			if gotPwd != tt.wantPwd {
-				t.Errorf("actionHandle.getCredentials() gotPwd = %v, want %v", gotPwd, tt.wantPwd)
-			}
-		})
-	}
+	input := "Test\n"
+	reader := bufio.NewReader(strings.NewReader(input))
+
+	value, err := reader.ReadBytes(byte(10))
+	assert.NoError(t, err)
+	assert.Equal(t, input, string(value))
 }

@@ -21,8 +21,6 @@ const (
 	msgUserDisable           = "User disabled successfully"
 	msgErrorActionInput      = "No such command for execute"
 	msgErrorCheckCredentials = "Error checking credentials"
-	msgErrorCheckLogin       = "Error: no such user"
-	msgErrorCheckPwd         = "Error: password mismatch"
 
 	msgCreate   = "Creating user "
 	msgUpdate   = "Updating user "
