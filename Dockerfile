@@ -11,6 +11,8 @@ WORKDIR /opt/resource/
 COPY . .
 WORKDIR /opt/resource/cmd/umserver
 RUN go build -o /opt/services/user-manager/cmd/umserver .
+WORKDIR /opt/resource/cmd/umcli
+RUN go build -o /opt/services/user-manager/cmd/umcli .
 
 FROM alpine:3.7
 COPY --from=builder /opt/services/user-manager /opt/services/user-manager

@@ -31,11 +31,11 @@ type Config struct {
 
 	LoggerPassSecret string `envconfig:"LOGGER_PASS_SECRET"`
 	LoggerPassSHA2   string `envconfig:"LOGGER_PASS_SHA2"`
-	LoggerOutput     string `envconfig:"LOGGER_OUTPUT" default:"Stdout"`
+	LoggerOutput     string `envconfig:"LOGGER_OUTPUT" default:"Graylog"`
 	LoggerLevel      string `envconfig:"LOGGER_LEVEL" default:"info"`
 	LoggerType       string `envconfig:"LOGGER_TYPE" default:"async"`
-
-	sd ServiceDiscovery
+	LoggerUDP        int    `envconfig:"GRAYLOG_UDP" default:"12201"`
+	sd               ServiceDiscovery
 }
 
 // NewConfig() create new configuration for application
@@ -68,14 +68,14 @@ func NewConfig() (*Config, error) {
 func (c *Config) LoggerConfig(ctx context.Context) (*logger.LogConfig, error) {
 	const serviceName = "graylog"
 
-	host, port, err := c.sd.GetService(ctx, serviceName)
+	host, _, err := c.sd.GetService(ctx, serviceName)
 	if err != nil {
 		return nil, err
 	}
 
 	return &logger.LogConfig{
 		Host:       host,
-		Port:       port,
+		Port:       c.LoggerUDP,
 		PassSecret: c.LoggerPassSecret,
 		PassSHA2:   c.LoggerPassSHA2,
 		Output:     c.LoggerOutput,
