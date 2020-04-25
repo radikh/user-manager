@@ -34,7 +34,7 @@ type Config struct {
 	LoggerOutput     string `envconfig:"LOGGER_OUTPUT" default:"Graylog"`
 	LoggerLevel      string `envconfig:"LOGGER_LEVEL" default:"info"`
 	LoggerType       string `envconfig:"LOGGER_TYPE" default:"async"`
-	LoggerUDP        int    `envconfig:"GRAYLOG_UDP" default:"12201"`
+	LoggerPort        int    `envconfig:"GRAYLOG_UDP" default:"12201"`
 	sd               ServiceDiscovery
 }
 
