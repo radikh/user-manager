@@ -1,0 +1,1 @@
+ALTER TABLE users ADD salted boolean NOT NULL DEFAULT true;

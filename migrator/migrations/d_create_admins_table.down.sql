@@ -1,0 +1,3 @@
+REVOKE SELECT, INSERT, DELETE, UPDATE  ON admins FROM um_user;
+DROP TABLE IF EXISTS admins;
+DROP SEQUENCE IF EXISTS admins_code_id_seq;

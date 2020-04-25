@@ -1,19 +1,17 @@
-version: '3'
+version: "3"
 
 networks:
   gpsnet:
     driver: bridge
 
-
 services:
-
   mongo:
     image: mongo:4.1
     networks:
       - gpsnet
-  
+
   elasticsearch:
-    image:  docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.2
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.2
     environment:
       - http.host=0.0.0.0
       - transport.host=localhost
@@ -25,11 +23,11 @@ services:
         hard: -1
     networks:
       - gpsnet
-  
+
   graylog:
-    image: graylog/graylog:3.2.3
     networks:
       - gpsnet
+    build: ./infra/graylog
     env_file:
       - .env
     links:
@@ -49,8 +47,13 @@ services:
       - 12201:12201
       # GELF UDP
       - 12201:12201/udp
-  
-     
+    restart: on-failure
+    healthcheck:
+      test: /bin/health-check-udp-input.sh
+      interval: 50s
+      timeout: 10s
+      retries: 10
+
   db:
     image: postgres:12.2
     restart: always
@@ -59,8 +62,7 @@ services:
     env_file:
       - .env
     volumes:
-# FATAL:  data directory "/var/lib/postgresql/data" has wrong ownership
-#      - ./db-data:/var/lib/postgresql/data
+      - ./db-data:/var/lib/postgresql/data
       - ./migrator/init:/docker-entrypoint-initdb.d/
     ports:
       - 5432:5432
@@ -69,16 +71,23 @@ services:
     image: migrate/migrate
     networks:
       - gpsnet
-    volumes: 
+    volumes:
       - ./migrator/migrations:/migrations
     env_file:
       - .env
-    command: ["-path", "./migrations", "-database",  "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB?sslmode=disable", "up"]
-    depends_on: 
+    command:
+      [
+        "-path",
+        "./migrations",
+        "-database",
+        "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/$POSTGRES_DB?sslmode=disable",
+        "up",
+      ]
+    depends_on:
       - db
     restart: on-failure
-     
-  consul-agent: 
+
+  consul-agent:
     networks:
       - gpsnet
     build: ./infra/consul
@@ -108,7 +117,7 @@ services:
       - "8600:8600"
       - "8600:8600/udp"
     command: "agent -server -bootstrap-expect 3 -ui -client 0.0.0.0"
-  
+
   usermanager:
     image: github.com/lvl484/user-manager
     networks:
@@ -121,10 +130,9 @@ services:
     build:
       dockerfile: Dockerfile
       context: .
-    depends_on:  
+    depends_on:
       - db
       - migrator
       - graylog
       - consul-server-bootstrap
     restart: on-failure
-     

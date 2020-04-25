@@ -1,36 +1,36 @@
 {
-    "services":[
-      {
-        "name":"db",
-        "address": "db",
-        "tags":[
-          "db"
-        ],
-        "port":5432,
-        "checks":[
-          {
-            "name":"Postgres-tcp-5432",
-            "tcp":"db:5432",
-            "interval":"10s",
-            "timeout":"1s"
-          }
-        ]
-      },
-      {
-        "name":"graylog",
-        "address": "graylog",
-        "tags":[
-          "graylog"
-        ],
-        "port":9000,
-        "checks":[
-          {
-            "name":"graylog-check-9000",
-            "tcp":"graylog:9000",
-            "interval":"30s",
-            "timeout":"5s"
-          }
-        ]
-      }
-    ]
-  }
+  "services": [
+    {
+      "name": "db",
+      "address": "db",
+      "tags": [
+        "db"
+      ],
+      "port": 5432,
+      "checks": [
+        {
+          "name": "Postgres-tcp-5432",
+          "tcp": "db:5432",
+          "interval": "10s",
+          "timeout": "1s"
+        }
+      ]
+    },
+    {
+      "name": "graylog",
+      "address": "graylog",
+      "tags": [
+        "graylog"
+      ],
+      "port": 9000,
+      "checks": [
+        {
+          "name": "graylog-check-9000",
+          "tcp": "graylog:9000",
+          "interval": "30s",
+          "timeout": "5s"
+        }
+      ]
+    }
+  ]
+}
