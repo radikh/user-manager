@@ -147,13 +147,14 @@ func TestConfigLoggerConfig(t *testing.T) {
 		LoggerOutput:     "Stdout",
 		LoggerLevel:      "info",
 		LoggerType:       "async",
+		LoggerPort:       12201,
 		sd:               sd,
 	}
 
 	got, err := c.LoggerConfig(context.Background())
 	require.NoError(t, err)
 
-	assert.Equal(t, sd.Port, got.Port)
+	assert.Equal(t, c.LoggerPort, got.Port)
 	assert.Equal(t, sd.Address, got.Host)
 	assert.Equal(t, c.LoggerPassSecret, got.PassSecret)
 	assert.Equal(t, c.LoggerPassSHA2, got.PassSHA2)
