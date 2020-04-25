@@ -1,2 +1,3 @@
-DROP TABLE IF EXISTS public.codes;
-DROP SEQUENCE IF EXISTS public.codes_code_id_seq;
+REVOKE SELECT, INSERT, DELETE, UPDATE  ON codes FROM um_user;
+DROP TABLE IF EXISTS codes;
+DROP SEQUENCE IF EXISTS codes_code_id_seq;

@@ -1,2 +1,2 @@
-ALTER TABLE public.users DROP COLUMN  IF EXISTS salted
+ALTER TABLE users DROP COLUMN  IF EXISTS salted
 CASCADE;   

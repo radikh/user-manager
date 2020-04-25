@@ -1,4 +1,4 @@
-ALTER TABLE public.users ALTER COLUMN  "password"
+ALTER TABLE users ALTER COLUMN  "password"
 SET DATA TYPE
 varchar
 (60);
