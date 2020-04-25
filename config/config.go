@@ -75,7 +75,7 @@ func (c *Config) LoggerConfig(ctx context.Context) (*logger.LogConfig, error) {
 
 	return &logger.LogConfig{
 		Host:       host,
-		Port:       c.LoggerUDP,
+		Port:       c.LoggerPort,
 		PassSecret: c.LoggerPassSecret,
 		PassSHA2:   c.LoggerPassSHA2,
 		Output:     c.LoggerOutput,
