@@ -24,12 +24,15 @@ const (
 	querySetCode            = `INSERT INTO codes(user_name,code, expired_at, active) VALUES ($1,$2,$3,$4)`
 	queryDisableCode        = `UPDATE codes SET active = false WHERE active=true AND user_name=$1`
 	queryCheckCode          = `SELECT code, expired_at FROM codes WHERE user_name=$1 AND active=true`
+	queryCheckAdmin         = `SELECT password FROM admins WHERE admin=$1`
 	msgUserDisable          = "User is disabled"
 	msgErrorHashingPassword = "Error hashing password"
 	msgErrorGeneratingUUID  = "Error generating new UUID for user"
 	msgUserDidNotExist      = "There is no such user in database"
 	msgCodeDidNotExist      = "There is no any generating code for that user in database"
 	msgCodeExpired          = "Activation code is expired"
+	msgErrorCheckLogin      = "Error: no such user"
+	msgErrorCheckPwd        = "Error: password mismatch"
 )
 
 //UsersRepo structure that contain pointer to database
@@ -159,7 +162,7 @@ func (ur *UsersRepo) CheckActivationCode(login string, code string) (bool, error
 	err := ur.db.QueryRow(queryCheckCode, login).Scan(&dbcode, &expTime)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return false, errors.Wrap(err, msgCodeDidNotExist)
+			return false, errors.Wrap(err, msgErrorCheckLogin)
 		}
 		return false, err
 	}
@@ -167,4 +170,25 @@ func (ur *UsersRepo) CheckActivationCode(login string, code string) (bool, error
 		return false, errors.Wrap(err, msgCodeExpired)
 	}
 	return dbcode == code, nil
+}
+
+//CheckActivationCode read from database  activation code for changing password
+// and compare it with provided code and return true if match, else return false
+func (ur *UsersRepo) CheckAdminRole(login string, pwd string) (bool, error) {
+	var password string
+	err := ur.db.QueryRow(queryCheckAdmin, login).Scan(&password)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, errors.Wrap(err, msgErrorCheckLogin)
+		}
+		return false, err
+	}
+	status, err := ComparePassword(pwd, password)
+	if err != nil {
+		return false, err
+	}
+	if !status {
+		return false, errors.Wrap(err, msgErrorCheckPwd)
+	}
+	return status, nil
 }
