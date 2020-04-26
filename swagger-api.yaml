@@ -215,8 +215,6 @@ components:
           type: string
         username:
           type: string
-        password:
-          type: string
         email:
           type: string
         firstName:
