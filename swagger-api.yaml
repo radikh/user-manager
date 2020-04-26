@@ -13,11 +13,11 @@ paths:
         - validate
       responses:
         200:
-          description: 'An account info'
+          description: 'Valid account'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccountInfo'
+                $ref: '#/components/schemas/Validate'
         401:
           description: 'Authenticate failed'
           content:
@@ -81,7 +81,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AccountCreate'
+              $ref: '#/components/schemas/AccountCreateReq'
         required: true
       responses:
         201:
@@ -89,7 +89,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccountInfo'
+                $ref: '#/components/schemas/AccountCreate'
         400:
           description: 'Bad request'
           content:
@@ -158,8 +158,12 @@ paths:
       tags:
         - account
       responses:
-        204:
+        200:
           description: 'Successfully deleted'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountDelete'
         401:
           description: 'Authenticate failed'
           content:
@@ -187,7 +191,7 @@ components:
       type: http
       scheme: basic
   schemas:
-    AccountCreate:
+    AccountCreateReq:
       required:
         - username
         - password
@@ -199,8 +203,18 @@ components:
           type: string
         email:
           type: string
-    AccountUpdate:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+    AccountCreate:
       properties:
+        id:
+          type: string
+        username:
+          type: string
         password:
           type: string
         email:
@@ -211,10 +225,18 @@ components:
           type: string
         phone:
           type: string
+    AccountUpdate:
+      properties:
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
     AccountInfo:
       properties:
-        id:
-          type: string
         username:
           type: string
         email:
@@ -224,6 +246,14 @@ components:
         lastName:
           type: string
         phone:
+          type: string
+    Validate:
+      properties:
+        id:
+          type: string
+    AccountDelete:
+      properties:
+        username:
           type: string
     Error:
       properties:
