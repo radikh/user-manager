@@ -12,10 +12,11 @@ import (
 )
 
 const (
-	StatusInfoOK             = "An account info"
-	StatusCreateOK           = "Successfully created"
-	StatusUpdateOK           = "Successfully updated"
-	StatusDeleteOK           = "Successfully deleted"
+	StatusInfoOK             = "An account info\n"
+	StatusCreateOK           = "Successfully created\n"
+	StatusUpdateOK           = "Successfully updated\n"
+	StatusDeleteOK           = "Successfully deleted\n"
+	StatusValidOK            = "Valid account\n"
 	StatusBadRequest         = "Bad request"
 	StatusAuthenticateFailed = "Authenticate failed"
 	StatusAccountNotExist    = "Account does not exist"
@@ -143,7 +144,7 @@ func (a *account) DeleteAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createJSONResponse(w, http.StatusNoContent, StatusDeleteOK, nil)
+	createJSONResponse(w, http.StatusOK, StatusDeleteOK, username)
 }
 
 // ValidateAccount check if such account exist, check password and return user ID
@@ -172,5 +173,5 @@ func (a *account) ValidateAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createJSONResponse(w, http.StatusOK, StatusInfoOK, user.ID)
+	createJSONResponse(w, http.StatusOK, StatusValidOK, user.ID)
 }
