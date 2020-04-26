@@ -5,182 +5,269 @@ info:
 paths:
   /validate:
     get:
-      summary: 'Validate account'
-      description: 'Read credentials from http headers, validate them,
-                    and return context values that will be used by other components
-                    of the system in subsequent calls.'
+      summary: "Validate account"
+      description: "Read credentials from http headers, validate them,
+        and return context values that will be used by other components
+        of the system in subsequent calls."
       tags:
         - validate
       responses:
         200:
-          description: 'An account info'
+          description: "An account info"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccountInfo'
+                $ref: "#/components/schemas/AccountInfo"
         401:
-          description: 'Authenticate failed'
+          description: "Authenticate failed"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
         404:
-          description: 'Account does not exist'
+          description: "Account does not exist"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
         default:
-          description: 'Unexpected error'
+          description: "Unexpected error"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
       security:
         - basicAuth: []
   /account:
     get:
-      summary: 'Account info'
-      description: 'Read credentials from http headers and
-                   return information about the user that owns that credentials.'
+      summary: "Account info"
+      description: "Read credentials from http headers and
+        return information about the user that owns that credentials."
       tags:
         - account
       responses:
         200:
-          description: 'An account info'
+          description: "An account info"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccountInfo'
+                $ref: "#/components/schemas/AccountInfo"
         401:
-          description: 'Authenticate failed'
+          description: "Authenticate failed"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
         404:
-          description: 'Account does not exist'
+          description: "Account does not exist"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
         default:
-          description: 'Unexpected error'
+          description: "Unexpected error"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
       security:
         - basicAuth: []
     post:
-      summary: 'Create new account'
-      description: 'Create new user account.'
+      summary: "Create new account"
+      description: "Create new user account."
       tags:
         - account
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AccountCreate'
+              $ref: "#/components/schemas/AccountCreate"
         required: true
       responses:
         201:
-          description: 'Successfully created'
+          description: "Successfully created"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccountInfo'
+                $ref: "#/components/schemas/AccountInfo"
         400:
-          description: 'Bad request'
+          description: "Bad request"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
         409:
-          description: 'Login in use'
+          description: "Login in use"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
         default:
-          description: 'Unexpected error'
+          description: "Unexpected error"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
     put:
-      summary: 'Update account'
-      description: 'Changing user related data.'
+      summary: "Update account"
+      description: "Changing user related data."
       tags:
         - account
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AccountUpdate'
+              $ref: "#/components/schemas/AccountUpdate"
         required: true
       responses:
         200:
-          description: 'Successfully updated'
+          description: "Successfully updated"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccountInfo'
+                $ref: "#/components/schemas/AccountInfo"
         400:
-          description: 'Bad request'
+          description: "Bad request"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
         401:
-          description: 'Authenticate failed'
+          description: "Authenticate failed"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
         404:
-          description: 'Account does not exist'
+          description: "Account does not exist"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
         default:
-          description: 'Unexpected error'
+          description: "Unexpected error"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
       security:
         - basicAuth: []
     delete:
-      summary: 'Delete account'
-      description: 'Delete account.'
+      summary: "Delete account"
+      description: "Delete account."
       tags:
         - account
       responses:
         204:
-          description: 'Successfully deleted'
+          description: "Successfully deleted"
         401:
-          description: 'Authenticate failed'
+          description: "Authenticate failed"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
         404:
-          description: 'Account does not exist'
+          description: "Account does not exist"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
         default:
-          description: 'Unexpected error'
+          description: "Unexpected error"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: "#/components/schemas/Error"
       security:
         - basicAuth: []
-
+  /password:
+    get:
+      summary: "Refresh activation code"
+      description:
+        "Read credentials from http headers and refresh activation code
+        sent to user that owns that credentials."
+      tags:
+        - password
+      responses:
+        200:
+          description: "Operation successfull"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        default:
+          description: "Unexpected error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - basicAuth: []
+    put:
+      summary: "Change password"
+      description: "Read activatiom code from http body and
+        change password for user"
+      tags:
+        - password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordChange"
+        required: true
+      responses:
+        200:
+          description: "Operation successfull"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        default:
+          description: "Unexpected error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      summary: "Request to change password"
+      description:
+        "Read credentials from http headers and make request to change
+        password for user that owns that credentials."
+      tags:
+        - password
+      responses:
+        200:
+          description: "Operation successfull"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        400:
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        default:
+          description: "Unexpected error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      security:
+        - basicAuth: []
 components:
   securitySchemes:
     basicAuth:
@@ -224,6 +311,14 @@ components:
         lastName:
           type: string
         phone:
+          type: string
+    PasswordChange:
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        code:
           type: string
     Error:
       properties:
