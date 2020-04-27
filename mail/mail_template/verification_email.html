@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Manager Registration</title>
+</head>
+<body>
+    <h1>User Manager Service</h1>
+    <h3>Thank you for registration!</h3>
+
+    <p>Hello, You want to register on User manager service.</p>
+    <p>You need to do one more step to finish registration...</p>
+    <br>
+    <p>Verification code: <strong>{{.Code}}</strong></p>
+    <p>
+        Please click and enter the verification code
+        <a href="{{.URL}}"><strong>here</strong></a>
+    </p>
+    <br>
+    <p>If you did not register in User manager Service, please ignore this email!</p>
+    <br>
+    <p>
+        <i>
+            Best Regards,<br><br>
+            User Manager Service<br>
+        </i>
+    </p>
+</body>
+</html>

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/lvl484/user-manager/logger"
+	"github.com/lvl484/user-manager/mail"
 	"github.com/lvl484/user-manager/storage"
 
 	consul "github.com/hashicorp/consul/api"
@@ -34,6 +35,15 @@ type Config struct {
 	LoggerOutput     string `envconfig:"LOGGER_OUTPUT" default:"Stdout"`
 	LoggerLevel      string `envconfig:"LOGGER_LEVEL" default:"info"`
 	LoggerType       string `envconfig:"LOGGER_TYPE" default:"async"`
+
+	EmailAddress  string `envconfig:"EMAIL_ADDRESS" default:"user.namager@gmail.com"`
+	EmailPassword string `envconfig:"EMAIL_PASSWORD" required:"true"`
+	EmailHost     string `envconfig:"EMAIL_HOST" default:"smtp.gmail.com"`
+	EmailPort     int    `envconfig:"EMAIL_PORT" default:"587"`
+
+	TemplatePath string `envconfig:"TEMPLATE_PATH" default:"mail/mail_template/"`
+
+	PublicURL string `envconfig:"PUBLIC_URL" default:"http://localhost:8000"`
 
 	sd ServiceDiscovery
 }
@@ -104,4 +114,16 @@ func (c *Config) DBConfig(ctx context.Context) (*storage.DBConfig, error) {
 
 func (c *Config) ServerAddress() string {
 	return fmt.Sprintf("%s:%d", c.HTTPIP, c.HTTPPort)
+}
+
+// EmailConfig get configuration for Email
+func (c *Config) EmailConfig() (*mail.EmailConfig, error) {
+	return &mail.EmailConfig{
+		Sender:       c.EmailAddress,
+		Password:     c.EmailPassword,
+		Host:         c.EmailHost,
+		Port:         c.EmailPort,
+		PublicURL:    c.PublicURL,
+		TemplatePath: c.TemplatePath,
+	}, nil
 }

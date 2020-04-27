@@ -16,6 +16,7 @@ func TestNewConfigRequired(t *testing.T) {
 	os.Setenv("POSTGRES_DB", "um_db")
 	os.Setenv("CONSUL_ADDRESS", "consul:8500")
 	os.Setenv("CONSUL_TOKEN", "token")
+	os.Setenv("EMAIL_PASSWORD", "password")
 
 	cfg, err := NewConfig()
 	require.NoError(t, err)
@@ -59,6 +60,7 @@ func TestNewConfigDefault(t *testing.T) {
 	os.Setenv("POSTGRES_DB", "unused")
 	os.Setenv("CONSUL_ADDRESS", "unused:8500")
 	os.Setenv("CONSUL_TOKEN", "unused")
+	os.Setenv("EMAIL_PASSWORD", "password")
 
 	cfg, err := NewConfig()
 	require.NoError(t, err)
@@ -132,7 +134,7 @@ func TestConfigDBConfig(t *testing.T) {
 	assert.Equal(t, c.PostgresDB, got.DBName)
 
 	sd.Err = errors.New("negative test case")
-	got, err = c.DBConfig(context.Background())
+	_, err = c.DBConfig(context.Background())
 	assert.Error(t, err)
 }
 
@@ -162,6 +164,27 @@ func TestConfigLoggerConfig(t *testing.T) {
 	assert.Equal(t, c.LoggerType, got.Type)
 
 	sd.Err = errors.New("negative test case")
-	got, err = c.LoggerConfig(context.Background())
+	_, err = c.LoggerConfig(context.Background())
 	assert.Error(t, err)
+}
+
+func TestConfigEmailConfig(t *testing.T) {
+	c := Config{
+		EmailAddress:  "user@example.com",
+		EmailPassword: "password",
+		EmailHost:     "smtp.gmail.com",
+		EmailPort:     587,
+		TemplatePath:  "http://localhost:8000/verification",
+		PublicURL:     "http://localhost:8000",
+	}
+
+	got, err := c.EmailConfig()
+	require.NoError(t, err)
+
+	assert.Equal(t, c.EmailAddress, got.Sender)
+	assert.Equal(t, c.EmailPassword, got.Password)
+	assert.Equal(t, c.EmailHost, got.Host)
+	assert.Equal(t, c.EmailPort, got.Port)
+	assert.Equal(t, c.TemplatePath, got.TemplatePath)
+	assert.Equal(t, c.PublicURL, got.PublicURL)
 }

@@ -49,9 +49,9 @@ func main() {
 	}
 
 	// Example
-	log.Println(cfg)
-	log.Println(cfg.LoggerConfig(ctx))
-	log.Println(cfg.DBConfig(ctx))
+	//log.Println(cfg)
+	//log.Println(cfg.LoggerConfig(ctx))
+	//log.Println(cfg.DBConfig(ctx))
 
 	dbConfig, err := cfg.DBConfig(ctx)
 	if err != nil {
@@ -83,7 +83,6 @@ func main() {
 		}
 	}()
 
-	// Watch errors and os signals
 	interrupt, code := make(chan os.Signal, 1), 0
 	signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
 

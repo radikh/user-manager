@@ -24,9 +24,9 @@ type User struct {
 	// Valid phone
 	Phone string `json:"phone"`
 	// Time when user was created
-	CreatedAt *time.Time `json:"created_at"`
+	CreatedAt *time.Time `json:"-"`
 	// Time of last changes made
-	UpdatedAt *time.Time `json:"updated_at"`
+	UpdatedAt *time.Time `json:"-"`
 }
 
 type Users interface {
@@ -37,4 +37,9 @@ type Users interface {
 	Activate(login string) error
 	GetInfo(login string) (*User, error)
 	CheckLoginExist(lo string) (bool, error)
+
+	AddActivationCode(user *User) error
+	DeleteVerificationCode(login string) error
+	GetUserInfoIncludingSalted(login string) (*User, error)
+	GetVerificationCodeTime(login string) (*time.Time, string, error)
 }
