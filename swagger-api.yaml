@@ -180,7 +180,61 @@ paths:
                 $ref: '#/components/schemas/Error'
       security:
         - basicAuth: []
-
+  /verification:
+    get:
+      summary: 'Get Verification page'
+      description: 'Read verification page template and return it into response'
+      tags:
+        - verification
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: 'Unexpected error'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: 'Account Verification'
+      description: 'Read usersname, password and verification code from body and compare this information with data in storage.'
+      tags:
+        - verification
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationInfo'
+        required: true
+      responses:
+        200:
+          description: 'Successfully verified'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        400:
+          description: 'Bad request'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        401:
+          description: 'Authenticate failed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: 'Unexpected error'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   securitySchemes:
     basicAuth:
@@ -224,6 +278,14 @@ components:
         lastName:
           type: string
         phone:
+          type: string
+    VerificationInfo:
+      properties:
+        login:
+          type: string
+        password:
+          type: string
+        code:
           type: string
     Error:
       properties:
